@@ -1,0 +1,47 @@
+--  Créer la base si elle n'existe pas
+CREATE DATABASE timezone_db;
+
+
+--  TABLE : Utilisateurs
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  nom VARCHAR(100) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  mot_de_passe TEXT NOT NULL,
+  role VARCHAR(20) NOT NULL CHECK (role IN ('employe', 'secretaire', 'admin')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--  TABLE : Pointages
+CREATE TABLE IF NOT EXISTS pointages (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(20) NOT NULL CHECK (type IN ('entree', 'pause', 'reprise', 'sortie')),
+  horodatage TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--  TABLE : Congés
+CREATE TABLE IF NOT EXISTS conges (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(50) NOT NULL CHECK (type IN ('CP', 'RTT', 'Sans solde', 'Maladie')),
+  date_debut DATE NOT NULL,
+  date_fin DATE NOT NULL,
+  statut VARCHAR(20) NOT NULL DEFAULT 'en_attente' CHECK (statut IN ('en_attente', 'valide', 'refuse')),
+  motif_refus TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--  TABLE : Dates Bloquées
+CREATE TABLE IF NOT EXISTS dates_bloquees (
+  id SERIAL PRIMARY KEY,
+  date_debut DATE NOT NULL,
+  date_fin DATE NOT NULL,
+  motif TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
