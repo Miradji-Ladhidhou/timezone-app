@@ -1,9 +1,8 @@
---  Créer la base si elle n'existe pas
+-- 1. Créer la base
 CREATE DATABASE timezone_db;
 
-
---  TABLE : Utilisateurs
-CREATE TABLE IF NOT EXISTS users (
+-- 2. TABLE : Utilisateurs
+CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   nom VARCHAR(100) NOT NULL,
   email VARCHAR(100) UNIQUE NOT NULL,
@@ -13,20 +12,20 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
---  TABLE : Pointages
-CREATE TABLE IF NOT EXISTS pointages (
+-- 3. TABLE : Pointages
+CREATE TABLE pointages (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   type VARCHAR(20) NOT NULL CHECK (type IN ('entree', 'pause', 'reprise', 'sortie')),
   horodatage TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
---  TABLE : Congés
-CREATE TABLE IF NOT EXISTS conges (
+-- 4. TABLE : Congés
+CREATE TABLE conges (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   type VARCHAR(50) NOT NULL CHECK (type IN ('CP', 'RTT', 'Sans solde', 'Maladie')),
   date_debut DATE NOT NULL,
   date_fin DATE NOT NULL,
@@ -36,8 +35,8 @@ CREATE TABLE IF NOT EXISTS conges (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
---  TABLE : Dates Bloquées
-CREATE TABLE IF NOT EXISTS dates_bloquees (
+-- 5. TABLE : Dates Bloquées
+CREATE TABLE dates_bloquees (
   id SERIAL PRIMARY KEY,
   date_debut DATE NOT NULL,
   date_fin DATE NOT NULL,

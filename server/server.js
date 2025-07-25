@@ -11,7 +11,8 @@ app.use(express.json());
 app.get('/', (req, res) => res.send('API TimeZone opérationnelle'));
 
 // Routes
-
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
 
 // Port
 const PORT = process.env.PORT || 5000;
