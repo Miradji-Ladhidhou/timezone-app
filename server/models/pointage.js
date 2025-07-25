@@ -8,7 +8,7 @@ module.exports = (sequelize) => {
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'user_id'
+      field: 'user_id' // colonne réelle en BDD
     },
     type: {
       type: DataTypes.STRING,
@@ -25,10 +25,17 @@ module.exports = (sequelize) => {
   }, {
     sequelize,
     modelName: 'Pointage',
-    tableName: 'pointages',
+    tableName: 'pointages', 
     underscored: true,
     timestamps: true
   });
+
+  Pointage.associate = (models) => {
+    Pointage.belongsTo(models.User, {
+      foreignKey: 'userId',
+      as: 'User'
+    });
+  };
 
   return Pointage;
 };

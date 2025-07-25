@@ -14,10 +14,12 @@ app.get('/', (req, res) => res.send('API TimeZone opérationnelle'));
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const pointageRoutes = require('./routes/pointageRoutes');
+const exportRoutes = require('./routes/exportRoutes');
 
 
 app.use('/api/auth', authRoutes);
 app.use('/api/pointages', pointageRoutes);
+app.use('/api/export', exportRoutes);
 
 
 // Port

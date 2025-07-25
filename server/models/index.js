@@ -17,6 +17,7 @@ const sequelize = new Sequelize(
   }
 );
 
+// Importation dynamique des modèles
 fs.readdirSync(__dirname)
   .filter(file => file !== 'index.js' && file.endsWith('.js'))
   .forEach(file => {
@@ -24,6 +25,7 @@ fs.readdirSync(__dirname)
     db[model.name] = model;
   });
 
+// Association des modèles
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
