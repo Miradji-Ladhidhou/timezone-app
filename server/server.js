@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+
 require('dotenv').config();
 
 const app = express();
@@ -12,7 +13,12 @@ app.get('/', (req, res) => res.send('API TimeZone opérationnelle'));
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
+const pointageRoutes = require('./routes/pointageRoutes');
+
+
 app.use('/api/auth', authRoutes);
+app.use('/api/pointages', pointageRoutes);
+
 
 // Port
 const PORT = process.env.PORT || 5000;
