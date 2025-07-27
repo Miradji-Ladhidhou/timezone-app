@@ -8,8 +8,7 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 
 // Route test protégée
-router.get('/me', verifyToken, (req, res) => {
-  res.status(200).json({ message: 'Token valide', user: req.user });
-});
+router.get('/me', verifyToken, authController.getMe);
+
 
 module.exports = router;

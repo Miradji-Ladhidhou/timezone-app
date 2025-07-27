@@ -48,4 +48,20 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const getMe = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'nom', 'email', 'role'],
+    });
+
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+module.exports = { register, login, getMe };
