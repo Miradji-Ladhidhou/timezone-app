@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Auth/Login.jsx';
+import Register from './pages/Auth/Register'
 import Dashboard from './pages/Dashboard';
 import Pointages from './pages/Pointages';
 import Conges from './pages/Conges';
@@ -13,6 +14,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />

@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
   // Fonction de login
   const login = async (email, password) => {
     try {
-      const res = await axios.post('/api/auth/login', { email, password });
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, { email, motDePasse: password });
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
       await fetchUser(res.data.token);
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
     async (authToken = token) => {
       if (!authToken) return;
       try {
-        const res = await axios.get('/api/auth/me', {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/auth/me`, {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
