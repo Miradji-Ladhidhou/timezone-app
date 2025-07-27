@@ -16,12 +16,14 @@ const authRoutes = require('./routes/authRoutes');
 const pointageRoutes = require('./routes/pointageRoutes');
 const exportRoutes = require('./routes/exportRoutes');
 const congeRoutes = require('./routes/congeRoutes');
+const dateBloqueeRoutes = require('./routes/dateBloqueeRoutes');
 
 
 app.use('/api/auth', authRoutes);
 app.use('/api/pointages', pointageRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/conges', congeRoutes);
+app.use('/api/dates-bloquees', dateBloqueeRoutes);
 
 // Port
 const PORT = process.env.PORT || 5000;

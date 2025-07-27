@@ -17,7 +17,7 @@ module.exports = (sequelize) => {
     },
     motif: {
       type: DataTypes.STRING,
-      allowNull: true
+      allowNull: false
     }
   }, {
     sequelize,
