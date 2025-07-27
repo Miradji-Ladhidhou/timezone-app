@@ -26,7 +26,7 @@ CREATE TABLE pointages (
 CREATE TABLE conges (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  type VARCHAR(50) NOT NULL CHECK (type IN ('CP', 'RTT', 'Sans solde', 'Maladie')),
+  type VARCHAR(50) NOT NULL CHECK (type IN ('Congé annuel', 'RTT', 'Sans solde', 'Maladie', 'Congé maternité', 'Congé maternité')),
   date_debut DATE NOT NULL,
   date_fin DATE NOT NULL,
   statut VARCHAR(20) NOT NULL DEFAULT 'en_attente' CHECK (statut IN ('en_attente', 'valide', 'refuse')),
