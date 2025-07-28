@@ -7,7 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Pointages from './pages/Pointages';
 import CongesRouter from './components/conges/CongesRouter';
 import HomePage from './pages/HomePage.jsx';
-import Users from './pages/Users';
+import UsersAdmin from './pages/UsersAdmin';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import CguPage from './pages/CguPage';
@@ -26,7 +26,7 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pointages" element={<Pointages />} />
           <Route path="/conges" element={<CongesRouter />} />
-          <Route path="/users" element={<Users />} />
+          <Route path="/users" element={<UsersAdmin />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/cgu" element={<CguPage />} />

@@ -31,7 +31,6 @@ const NavBar = () => {
             {user?.role === 'secretaire' && (
               <>
                 <Nav.Link as={Link} to="/conges">Gérer congés</Nav.Link>
-                <Nav.Link as={Link} to="/dates-bloquees">Dates bloquées</Nav.Link>
               </>
             )}
 

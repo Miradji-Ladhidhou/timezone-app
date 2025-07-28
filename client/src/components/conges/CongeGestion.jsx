@@ -184,7 +184,7 @@ const CongeGestion = () => {
 
   return (
     <Container className="mt-4">
-      <h3>🔧 Gestion des congés</h3>
+      <h3>Gestion des congés</h3>
 
       <h5 className="mt-4">Demandes de congés</h5>
       {!isMobile ? (
