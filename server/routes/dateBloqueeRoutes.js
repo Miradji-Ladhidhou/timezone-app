@@ -10,12 +10,13 @@ const {
 const { verifyToken } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/authorizeRoles');
 
-// Admin & Secrétaire uniquement
-router.use(verifyToken, authorizeRoles('admin', 'secretaire'));
+// Tout le monde authentifié peut lire les dates bloquées
+router.get('/', verifyToken, listerDates);
 
-router.get('/', listerDates);
-router.post('/', creerDate);
-router.put('/:id', mettreAJourDate);
-router.delete('/:id', supprimerDate);
+// Écriture réservée à admin & secrétaire
+router.post('/', verifyToken, authorizeRoles('admin', 'secretaire'), creerDate);
+router.put('/:id', verifyToken, authorizeRoles('admin', 'secretaire'), mettreAJourDate);
+router.delete('/:id', verifyToken, authorizeRoles('admin', 'secretaire'), supprimerDate);
 
 module.exports = router;
+

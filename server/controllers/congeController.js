@@ -24,10 +24,12 @@ const creerConge = async (req, res) => {
         ]
       }
     });
-
     const chevauchementDatesBloquees = datesBloquees.length > 0;
+    if (chevauchementDatesBloquees) {
+      console.warn("⚠️ Chevauchement avec une date bloquée détecté.");
+    }
 
-    // Vérifier les doublons de congés pour l'utilisateur
+    // Vérifier les doublons de congé
     const doublon = await Conge.findOne({
       where: {
         userId: req.user.id,
@@ -43,11 +45,9 @@ const creerConge = async (req, res) => {
         ]
       }
     });
-
     if (doublon) {
-      return res.status(409).json({ message: "Vous avez déjà une demande sur cette période." });
+      console.warn("⚠️ Doublon de demande de congé détecté.");
     }
-
     const conge = await Conge.create({
       userId: req.user.id,
       type,

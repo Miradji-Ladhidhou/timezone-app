@@ -1,3 +1,4 @@
+// Dashboard.jsx
 import React from 'react';
 import { Card, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,7 +19,7 @@ const Dashboard = () => {
       </p>
 
       <Row>
-        <Col md={4}>
+        <Col md={4} sm={12}>
           <Card className="mb-4 shadow-sm">
             <Card.Body>
               <Card.Title>Utilisateurs</Card.Title>
@@ -27,7 +28,7 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={4}>
+        <Col md={4} sm={12}>
           <Card className="mb-4 shadow-sm">
             <Card.Body>
               <Card.Title>Congés</Card.Title>
@@ -36,7 +37,7 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={4}>
+        <Col md={4} sm={12}>
           <Card className="mb-4 shadow-sm">
             <Card.Body>
               <Card.Title>Dates bloquées</Card.Title>
@@ -58,7 +59,7 @@ const Dashboard = () => {
       </p>
 
       <Row>
-        <Col md={6}>
+        <Col md={6} sm={12}>
           <Card className="mb-4 shadow-sm">
             <Card.Body>
               <Card.Title>Congés</Card.Title>
@@ -67,7 +68,7 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={6}>
+        <Col md={6} sm={12}>
           <Card className="mb-4 shadow-sm">
             <Card.Body>
               <Card.Title>Dates bloquées</Card.Title>
@@ -88,7 +89,7 @@ const Dashboard = () => {
       </p>
 
       <Row>
-        <Col md={6}>
+        <Col md={6} sm={12}>
           <Card className="mb-4 shadow-sm">
             <Card.Body>
               <Card.Title>Mes pointages</Card.Title>
@@ -97,7 +98,7 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={6}>
+        <Col md={6} sm={12}>
           <Card className="mb-4 shadow-sm">
             <Card.Body>
               <Card.Title>Mes congés</Card.Title>
