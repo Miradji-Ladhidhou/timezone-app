@@ -60,7 +60,7 @@ const Pointages = () => {
             <Card.Body>
               <Card.Title>Historique de mes pointages</Card.Title>
               <Card.Text>Visualisez toutes vos actions de pointage.</Card.Text>
-              <Button variant="success" onClick={() => setShowModal(true)}>➕ Ajouter un pointage</Button>
+              <Button variant="success" onClick={() => setShowModal(true)}>Ajouter un pointage</Button>
             </Card.Body>
           </Card>
         </Col>

@@ -6,8 +6,13 @@ import Register from './pages/Auth/Register'
 import Dashboard from './pages/Dashboard';
 import Pointages from './pages/Pointages';
 import CongesRouter from './components/conges/CongesRouter';
-import DatesBloquees from './pages/DatesBloquees';
+import HomePage from './pages/HomePage.jsx';
 import Users from './pages/Users';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import CguPage from './pages/CguPage';
+import ConfidentialitePage from './pages/ConfidentialitePage';
+import MentionsLegalesPage from './pages/MentionsLegalesPage';
 
 const App = () => {
   return (
@@ -17,11 +22,16 @@ const App = () => {
         <Route path="/register" element={<Register />} />
 
         <Route element={<Layout />}>
+          <Route path="/" element={<HomePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pointages" element={<Pointages />} />
           <Route path="/conges" element={<CongesRouter />} />
-          <Route path="/dates-bloquees" element={<DatesBloquees />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/cgu" element={<CguPage />} />
+          <Route path="/confidentialite" element={<ConfidentialitePage />} />
+          <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

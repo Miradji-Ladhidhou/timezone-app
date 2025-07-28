@@ -105,17 +105,17 @@ const CongeEmploye = () => {
     setAlert('');
     const now = new Date().toISOString().split('T')[0];
 
-    if (debut < now) return setAlert("❌ La date de début ne peut pas être dans le passé.");
+    if (debut < now) return setAlert("La date de début ne peut pas être dans le passé.");
 
     const messages = [];
 
     const bloquee = datesBloquees.some(date => debut <= date.dateFin && fin >= date.dateDebut);
-    if (bloquee) messages.push("⚠️ La période chevauche une date bloquée.");
+    if (bloquee) messages.push("La période chevauche une date bloquée.");
 
     const doublon = mesConges.some(c => debut <= c.dateFin && fin >= c.dateDebut);
-    if (doublon) messages.push("⚠️ Vous avez déjà une autre demande sur cette période.");
+    if (doublon) messages.push("Vous avez déjà une autre demande sur cette période.");
 
-    // ✅ Si conflit, demander confirmation
+    // Si conflit, demander confirmation
     if (messages.length > 0) {
       setPendingRequest({ type, dateDebut: debut, dateFin: fin, motif, messages });
       setShowConfirmation(true);
@@ -144,12 +144,12 @@ const CongeEmploye = () => {
       fetchMesConges();
       fetchCongesValides();
 
-      const finalMessage = ["✅ Demande envoyée."].concat(messages).join(' ');
+      const finalMessage = ["Demande envoyée."].concat(messages).join(' ');
       setAlert(finalMessage);
       setTimeout(() => setAlert(''), 8000);
     } catch (err) {
       console.error("Erreur demande congé:", err);
-      setAlert("❌ Une erreur est survenue.");
+      setAlert("Une erreur est survenue.");
     }
   };
 
@@ -159,7 +159,7 @@ const CongeEmploye = () => {
     <Container className="mt-4">
       <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>⚠️ Confirmation requise</Modal.Title>
+          <Modal.Title>Confirmation requise</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {pendingRequest?.messages?.map((m, i) => (
@@ -176,14 +176,14 @@ const CongeEmploye = () => {
       </Modal>
 
       <Row className="mb-3">
-        <Col><h3>📅 Mes congés - {user?.nom}</h3></Col>
+        <Col><h3>Mes congés - {user?.nom}</h3></Col>
         <Col className="text-end">
-          <Button onClick={() => setShowModal(true)} variant="primary">➕ Demander un congé</Button>
+          <Button onClick={() => setShowModal(true)} variant="primary">Demander un congé</Button>
         </Col>
       </Row>
 
       {/* Mes congés */}
-      <h5 className="mt-3">📋 Mes demandes</h5>
+      <h5 className="mt-3">Mes demandes</h5>
       {!isMobile ? (
         <>
           <Table bordered responsive>
@@ -238,7 +238,7 @@ const CongeEmploye = () => {
       )}
 
       {/* Dates bloquées */}
-      <h5 className="mt-4">🚫 Dates bloquées</h5>
+      <h5 className="mt-4">Dates bloquées</h5>
       <Row>
         {datesBloquees.map(date => (
           <Col xs={12} md={6} lg={4} key={date.id} className="mb-3">
@@ -258,7 +258,7 @@ const CongeEmploye = () => {
       </Row>
 
       {/* Congés validés */}
-      <h5 className="mt-4">✅ Congés validés (tous les employés)</h5>
+      <h5 className="mt-4">Congés validés (tous les employés)</h5>
       {!isMobile ? (
         <>
           <Table bordered responsive>

@@ -161,8 +161,8 @@ const CongeGestion = () => {
       conge.dateDebut <= c.dateFin && conge.dateFin >= c.dateDebut
     );
 
-    if (chevaucheBloquee) return '⚠️ Date bloquée';
-    if (chevaucheConge) return '⚠️ Doublon congé';
+    if (chevaucheBloquee) return 'Date bloquée';
+    if (chevaucheConge) return 'Doublon congé';
     return 'RAS';
   };
 
@@ -186,7 +186,7 @@ const CongeGestion = () => {
     <Container className="mt-4">
       <h3>🔧 Gestion des congés</h3>
 
-      <h5 className="mt-4">📅 Demandes de congés</h5>
+      <h5 className="mt-4">Demandes de congés</h5>
       {!isMobile ? (
         <>
           <Table bordered hover responsive>
@@ -237,7 +237,7 @@ const CongeGestion = () => {
                         }}>Refuser</Button>{' '}
                       </>
                     )}
-                    {c.statut !== 'valide' && (
+                    {!['valide', 'refuse'].includes(c.statut) && (
                       <Button size="sm" variant="outline-danger" onClick={() => deleteConge(c.id)}>🗑️</Button>
                     )}
                   </td>
@@ -272,7 +272,7 @@ const CongeGestion = () => {
                       }}>Refuser</Button>{' '}
                     </>
                   )}
-                  {c.statut !== 'valide' && (
+                  {!['valide', 'refuse'].includes(c.statut) && (
                     <Button size="sm" variant="outline-danger" onClick={() => deleteConge(c.id)}>🗑️</Button>
                   )}
                 </Card.Body>
@@ -285,11 +285,12 @@ const CongeGestion = () => {
 
       {/* Dates bloquées */}
       <h5 className="mt-5 d-flex justify-content-between align-items-center">
-        🚫 Dates bloquées
-        <Button size="sm" variant="outline-primary" onClick={() => setShowModalDate(true)}>➕ Ajouter</Button>
+        Dates bloquées
+        <Button size="sm" variant="outline-primary" onClick={() => setShowModalDate(true)}>Ajouter</Button>
       </h5>
+
       <Row>
-        {datesBloquees.map(date => (
+        {([...datesBloquees].sort((a, b) => new Date(a.dateDebut) - new Date(b.dateDebut))).map(date => (
           <Col xs={12} md={6} lg={4} key={date.id} className="mb-3">
             <Card className="border-danger bg-light h-100">
               <Card.Body>
@@ -297,13 +298,18 @@ const CongeGestion = () => {
                   Du {new Date(date.dateDebut).toLocaleDateString()}<br />
                   au {new Date(date.dateFin).toLocaleDateString()}
                 </Card.Title>
-                <Card.Text className="text-muted small">Motif : {date.motif || 'Non précisé'}</Card.Text>
-                <Button variant="outline-danger" size="sm" onClick={() => deleteDateBloquee(date.id)}>Supprimer</Button>
+                <Card.Text className="text-muted small">
+                  Motif : {date.motif || 'Non précisé'}
+                </Card.Text>
+                <Button variant="outline-danger" size="sm" onClick={() => deleteDateBloquee(date.id)}>
+                  Supprimer
+                </Button>
               </Card.Body>
             </Card>
           </Col>
         ))}
       </Row>
+
 
       {/* Modal */}
       <Modal show={showModalDate} onHide={() => setShowModalDate(false)}>

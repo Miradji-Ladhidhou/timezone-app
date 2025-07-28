@@ -12,7 +12,7 @@ const Dashboard = () => {
 
   const renderAdminView = () => (
     <>
-      <h2 className="mb-3">Bienvenue {nom} 👋</h2>
+      <h2 className="mb-3">Bienvenue {nom}</h2>
       <p className="lead">
         Vous êtes connecté en tant qu’<strong>administrateur</strong>.
         Vous pouvez gérer les utilisateurs, les congés et les périodes bloquées.
@@ -37,22 +37,13 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={4} sm={12}>
-          <Card className="mb-4 shadow-sm">
-            <Card.Body>
-              <Card.Title>Dates bloquées</Card.Title>
-              <Card.Text>Définir des périodes de fermeture ou indisponibilité.</Card.Text>
-              <Button variant="danger" href="/dates-bloquees">Voir les dates</Button>
-            </Card.Body>
-          </Card>
-        </Col>
       </Row>
     </>
   );
 
   const renderSecretaireView = () => (
     <>
-      <h2 className="mb-3">Bienvenue {nom} 👋</h2>
+      <h2 className="mb-3">Bienvenue {nom}</h2>
       <p className="lead">
         Vous êtes connecté en tant que <strong>secrétaire</strong>. 
         Vous avez accès à la gestion des congés et des dates bloquées.
@@ -69,13 +60,6 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col md={6} sm={12}>
-          <Card className="mb-4 shadow-sm">
-            <Card.Body>
-              <Card.Title>Dates bloquées</Card.Title>
-              <Card.Text>Ajouter ou modifier des périodes de fermeture.</Card.Text>
-              <Button variant="danger" href="/dates-bloquees">Voir les dates</Button>
-            </Card.Body>
-          </Card>
         </Col>
       </Row>
     </>
@@ -83,7 +67,7 @@ const Dashboard = () => {
 
   const renderEmployeView = () => (
     <>
-      <h2 className="mb-3">Bienvenue {nom} 👋</h2>
+      <h2 className="mb-3">Bienvenue {nom}</h2>
       <p className="lead">
         Vous êtes connecté en tant qu’<strong>employé</strong>. Voici ce que vous pouvez faire :
       </p>
