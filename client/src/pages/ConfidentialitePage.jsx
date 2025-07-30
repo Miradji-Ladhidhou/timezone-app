@@ -1,61 +1,60 @@
 import React from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Card } from 'react-bootstrap';
 
 const ConfidentialitePage = () => {
   return (
-    <div className="bg-light py-5 min-vh-100">
-      <Container>
-        <h1 className="mb-4 text-center">Politique de confidentialité</h1>
+    <Container className="py-4">
+      <h2 className="text-center mb-4">Politique de confidentialité</h2>
 
+      <Card className="p-4 shadow-sm border-0">
         <p>
           Cette politique de confidentialité décrit comment <strong>TimeZone 🕒</strong> collecte, utilise et protège vos données personnelles.
         </p>
 
-        <h4>1. Données collectées</h4>
+        <h5 className="mt-4">1. Données collectées</h5>
         <p>
           Nous collectons uniquement les données nécessaires à l’utilisation de la plateforme : nom, prénom, adresse e-mail, rôle, heures de pointage, congés, etc.
         </p>
 
-        <h4>2. Finalité de la collecte</h4>
-        <p>
-          Les données sont utilisées pour :
-        </p>
+        <h5 className="mt-4">2. Finalité de la collecte</h5>
+        <p>Les données sont utilisées pour :</p>
         <ul>
-          <li>Gérer les congés et pointages</li>
+          <li>Gérer les congés et les pointages</li>
           <li>Assurer le bon fonctionnement de l'application</li>
           <li>Communiquer avec les utilisateurs</li>
         </ul>
 
-        <h4>3. Conservation des données</h4>
+        <h5 className="mt-4">3. Conservation des données</h5>
         <p>
-          Les données sont conservées tant que votre compte est actif ou selon les obligations légales.
+          Les données sont conservées tant que votre compte est actif ou selon les obligations légales en vigueur.
         </p>
 
-        <h4>4. Sécurité</h4>
+        <h5 className="mt-4">4. Sécurité</h5>
         <p>
-          Vos données sont protégées par des mesures techniques (chiffrement, sécurisation des accès) et organisationnelles.
+          Vos données sont protégées par des mesures techniques (chiffrement, sécurisation des accès) et organisationnelles strictes.
         </p>
 
-        <h4>5. Partage des données</h4>
+        <h5 className="mt-4">5. Partage des données</h5>
         <p>
-          Aucune donnée n’est vendue ni partagée à des tiers, sauf obligation légale ou accord explicite de votre part.
+          Aucune donnée n’est vendue ni partagée avec des tiers, sauf obligation légale ou accord explicite de votre part.
         </p>
 
-        <h4>6. Vos droits</h4>
+        <h5 className="mt-4">6. Vos droits</h5>
         <p>
-          Conformément au RGPD, vous disposez d’un droit d’accès, de rectification, de suppression et de portabilité de vos données. Pour exercer ces droits, contactez-nous à : <a href="mailto:contact@timezone.app">contact@timezone.app</a>.
+          Conformément au RGPD, vous disposez d’un droit d’accès, de rectification, de suppression et de portabilité de vos données.
+          Pour exercer vos droits, contactez-nous à : <a href="mailto:contact@timezone.app">contact@timezone.app</a>
         </p>
 
-        <h4>7. Cookies</h4>
+        <h5 className="mt-4">7. Cookies</h5>
         <p>
-          Nous n’utilisons actuellement aucun cookie publicitaire ou de suivi tiers.
+          Nous n’utilisons actuellement aucun cookie publicitaire ni de suivi tiers.
         </p>
 
-        <p className="text-muted mt-4 small">
+        <p className="text-muted text-end small mt-4">
           Dernière mise à jour : {new Date().toLocaleDateString()}
         </p>
-      </Container>
-    </div>
+      </Card>
+    </Container>
   );
 };
 

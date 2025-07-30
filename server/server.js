@@ -18,6 +18,7 @@ const exportRoutes = require('./routes/exportRoutes');
 const congeRoutes = require('./routes/congeRoutes');
 const dateBloqueeRoutes = require('./routes/dateBloqueeRoutes');
 const userRoutes = require('./routes/userRoutes');
+const heuresSuppRoutes = require('./routes/heuresSuppRoutes');
 
 
 app.use('/api/auth', authRoutes);
@@ -26,6 +27,7 @@ app.use('/api/export', exportRoutes);
 app.use('/api/conges', congeRoutes);
 app.use('/api/dates-bloquees', dateBloqueeRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/heures-supp', heuresSuppRoutes);
 
 // Port
 const PORT = process.env.PORT || 5000;

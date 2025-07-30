@@ -1,3 +1,4 @@
+// src/pages/CongeGestion.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Container, Table, Button, Modal, Form, Badge, Row, Col, Alert, Card, Pagination
@@ -10,21 +11,9 @@ const CongeGestion = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (user && user.role === 'employe') {
-      navigate('/conges');
-    }
-  }, [user, navigate]);
-
   const [conges, setConges] = useState([]);
   const [datesBloquees, setDatesBloquees] = useState([]);
+
   const [showModalDate, setShowModalDate] = useState(false);
   const [newDebut, setNewDebut] = useState('');
   const [newFin, setNewFin] = useState('');
@@ -34,6 +23,17 @@ const CongeGestion = () => {
   const [tri, setTri] = useState({ colonne: 'createdAt', ordre: 'desc' });
   const [page, setPage] = useState(1);
   const parPage = 10;
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    if (user?.role === 'employe') navigate('/conges');
+  }, [user, navigate]);
+
+  useEffect(() => {
+    const resize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
 
   const fetchConges = useCallback(async () => {
     try {
@@ -56,60 +56,6 @@ const CongeGestion = () => {
       console.error("Erreur fetch dates bloquées:", err);
     }
   }, [token]);
-
-  const deleteConge = async (id) => {
-    if (!window.confirm("Supprimer ce congé ?")) return;
-    try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/conges/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchConges();
-    } catch (err) {
-      console.error("Erreur suppression congé:", err);
-    }
-  };
-
-  const handleValidation = async (id, statut, motifRefus = null) => {
-    try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/conges/${id}`,
-        { statut, motifRefus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchConges();
-    } catch (err) {
-      console.error("Erreur validation congé:", err);
-    }
-  };
-
-  const deleteDateBloquee = async (id) => {
-    if (!window.confirm("Supprimer cette date bloquée ?")) return;
-    try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/dates-bloquees/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchDatesBloquees();
-    } catch (err) {
-      console.error("Erreur suppression date bloquée:", err);
-    }
-  };
-
-  const handleAjoutDateBloquee = async () => {
-    if (!newDebut || !newFin) return setAlert("Veuillez compléter les deux dates.");
-    try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/dates-bloquees`,
-        { dateDebut: newDebut, dateFin: newFin, motif: motifDate },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setNewDebut('');
-      setNewFin('');
-      setMotifDate('');
-      setShowModalDate(false);
-      fetchDatesBloquees();
-    } catch (err) {
-      console.error("Erreur ajout date bloquée:", err);
-      setAlert("Erreur lors de l'ajout de la date bloquée.");
-    }
-  };
 
   useEffect(() => {
     fetchConges();
@@ -134,18 +80,16 @@ const CongeGestion = () => {
 
   const congesTries = [...conges].sort((a, b) => {
     let valA, valB;
-
     if (tri.colonne === 'user.nom') {
       valA = a.user?.nom?.toLowerCase() || '';
       valB = b.user?.nom?.toLowerCase() || '';
-    } else if (tri.colonne === 'createdAt' || tri.colonne === 'dateDebut' || tri.colonne === 'dateFin') {
+    } else if (['createdAt', 'dateDebut', 'dateFin'].includes(tri.colonne)) {
       valA = new Date(a[tri.colonne]);
       valB = new Date(b[tri.colonne]);
     } else {
       valA = a[tri.colonne]?.toString().toLowerCase() || '';
       valB = b[tri.colonne]?.toString().toLowerCase() || '';
     }
-
     if (valA < valB) return tri.ordre === 'asc' ? -1 : 1;
     if (valA > valB) return tri.ordre === 'asc' ? 1 : -1;
     return 0;
@@ -155,25 +99,75 @@ const CongeGestion = () => {
     const chevaucheBloquee = datesBloquees.some(date =>
       conge.dateDebut <= date.dateFin && conge.dateFin >= date.dateDebut
     );
-
     const chevaucheConge = conges.some(c =>
       c.id !== conge.id && c.statut === 'valide' &&
       conge.dateDebut <= c.dateFin && conge.dateFin >= c.dateDebut
     );
-
     if (chevaucheBloquee) return 'Date bloquée';
     if (chevaucheConge) return 'Doublon congé';
     return 'RAS';
   };
 
+  const handleValidation = async (id, statut, motifRefus = null) => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/conges/${id}`, { statut, motifRefus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchConges();
+    } catch (err) {
+      console.error("Erreur validation congé:", err);
+    }
+  };
 
+  const deleteConge = async (id) => {
+    if (!window.confirm("Supprimer ce congé ?")) return;
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/conges/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchConges();
+    } catch (err) {
+      console.error("Erreur suppression congé:", err);
+    }
+  };
+
+  const handleAjoutDateBloquee = async () => {
+    if (!newDebut || !newFin) return setAlert("Veuillez compléter les deux dates.");
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/dates-bloquees`, {
+        dateDebut: newDebut, dateFin: newFin, motif: motifDate
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNewDebut('');
+      setNewFin('');
+      setMotifDate('');
+      setShowModalDate(false);
+      fetchDatesBloquees();
+    } catch (err) {
+      console.error("Erreur ajout date bloquée:", err);
+      setAlert("Erreur lors de l'ajout.");
+    }
+  };
+
+  const deleteDateBloquee = async (id) => {
+    if (!window.confirm("Supprimer cette date bloquée ?")) return;
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/dates-bloquees/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchDatesBloquees();
+    } catch (err) {
+      console.error("Erreur suppression date bloquée:", err);
+    }
+  };
 
   const indexDebut = (page - 1) * parPage;
   const congesPage = congesTries.slice(indexDebut, indexDebut + parPage);
   const totalPages = Math.ceil(congesTries.length / parPage);
 
   const pagination = (
-    <Pagination className="mt-3">
+    <Pagination className="mt-3 justify-content-center">
       {[...Array(totalPages).keys()].map(num => (
         <Pagination.Item key={num + 1} active={num + 1 === page} onClick={() => setPage(num + 1)}>
           {num + 1}
@@ -184,12 +178,12 @@ const CongeGestion = () => {
 
   return (
     <Container className="mt-4">
-      <h3>Gestion des congés</h3>
+      <h3>📅 Gestion des congés</h3>
 
-      <h5 className="mt-4">Demandes de congés</h5>
+      {/* Table desktop */}
       {!isMobile ? (
         <>
-          <Table bordered hover responsive>
+          <Table bordered hover responsive className="mt-3">
             <thead>
               <tr>
                 <th onClick={() => handleTri('user.nom')} style={{ cursor: 'pointer' }}>
@@ -214,7 +208,6 @@ const CongeGestion = () => {
                 <th>Actions</th>
               </tr>
             </thead>
-
             <tbody>
               {congesPage.map(c => (
                 <tr key={c.id}>
@@ -224,9 +217,7 @@ const CongeGestion = () => {
                   <td>{new Date(c.dateFin).toLocaleDateString()}</td>
                   <td>{badgeStatut(c.statut)}</td>
                   <td>{new Date(c.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    {c.statut === 'en_attente' ? detecterChevauchement(c) : '-'}
-                  </td>
+                  <td>{c.statut === 'en_attente' ? detecterChevauchement(c) : '-'}</td>
                   <td>
                     {c.statut === 'en_attente' && (
                       <>
@@ -248,20 +239,18 @@ const CongeGestion = () => {
           {pagination}
         </>
       ) : (
-        <Row>
+        <Row className="mt-3">
           {congesPage.map(c => (
-            <Col xs={12} className="mb-3" key={c.id}>
+            <Col xs={12} key={c.id} className="mb-3">
               <Card>
                 <Card.Body>
                   <Card.Title>{c.user?.nom}</Card.Title>
                   <Card.Text><strong>Type :</strong> {c.type}</Card.Text>
-                  <Card.Text><strong>Période :</strong> du {new Date(c.dateDebut).toLocaleDateString()} au {new Date(c.dateFin).toLocaleDateString()}</Card.Text>
+                  <Card.Text><strong>Période :</strong> {new Date(c.dateDebut).toLocaleDateString()} → {new Date(c.dateFin).toLocaleDateString()}</Card.Text>
                   <Card.Text><strong>Statut :</strong> {badgeStatut(c.statut)}</Card.Text>
                   <Card.Text><strong>Demandé le :</strong> {new Date(c.createdAt).toLocaleDateString()}</Card.Text>
                   {c.statut === 'en_attente' && (
-                    <Card.Text>
-                      <strong>Chevauchement :</strong> {detecterChevauchement(c)}
-                    </Card.Text>
+                    <Card.Text><strong>Chevauchement :</strong> {detecterChevauchement(c)}</Card.Text>
                   )}
                   {c.statut === 'en_attente' && (
                     <>
@@ -290,7 +279,7 @@ const CongeGestion = () => {
       </h5>
 
       <Row>
-        {([...datesBloquees].sort((a, b) => new Date(a.dateDebut) - new Date(b.dateDebut))).map(date => (
+        {[...datesBloquees].sort((a, b) => new Date(a.dateDebut) - new Date(b.dateDebut)).map(date => (
           <Col xs={12} md={6} lg={4} key={date.id} className="mb-3">
             <Card className="border-danger bg-light h-100">
               <Card.Body>
@@ -301,17 +290,14 @@ const CongeGestion = () => {
                 <Card.Text className="text-muted small">
                   Motif : {date.motif || 'Non précisé'}
                 </Card.Text>
-                <Button variant="outline-danger" size="sm" onClick={() => deleteDateBloquee(date.id)}>
-                  Supprimer
-                </Button>
+                <Button variant="outline-danger" size="sm" onClick={() => deleteDateBloquee(date.id)}>Supprimer</Button>
               </Card.Body>
             </Card>
           </Col>
         ))}
       </Row>
 
-
-      {/* Modal */}
+      {/* Modal ajout date bloquée */}
       <Modal show={showModalDate} onHide={() => setShowModalDate(false)}>
         <Modal.Header closeButton><Modal.Title>Ajouter une date bloquée</Modal.Title></Modal.Header>
         <Modal.Body>
@@ -319,21 +305,15 @@ const CongeGestion = () => {
           <Form>
             <Form.Group className="mb-2">
               <Form.Label>Date de début</Form.Label>
-              <Form.Control type="date" value={newDebut} onChange={(e) => setNewDebut(e.target.value)} />
+              <Form.Control type="date" value={newDebut} onChange={e => setNewDebut(e.target.value)} />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Date de fin</Form.Label>
-              <Form.Control type="date" value={newFin} onChange={(e) => setNewFin(e.target.value)} />
+              <Form.Control type="date" value={newFin} onChange={e => setNewFin(e.target.value)} />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Motif (facultatif)</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                value={motifDate}
-                onChange={(e) => setMotifDate(e.target.value)}
-                placeholder="Ex: Fermeture annuelle"
-              />
+              <Form.Control as="textarea" rows={2} value={motifDate} onChange={e => setMotifDate(e.target.value)} placeholder="Ex: Fermeture annuelle" />
             </Form.Group>
           </Form>
         </Modal.Body>

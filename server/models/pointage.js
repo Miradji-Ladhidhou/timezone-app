@@ -1,40 +1,43 @@
-'use strict';
+`use strict`;
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Pointage extends Model {}
+  class Pointage extends Model { }
 
   Pointage.init({
-    userId: {
+    user_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'user_id' // colonne réelle en BDD
+      allowNull: false
     },
-    type: {
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false
+    },
+    entree: {
       type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isIn: [['entree', 'pause', 'reprise', 'sortie']]
-      }
+      allowNull: true
     },
-    horodatage: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW
+    pause: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    reprise: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    sortie: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   }, {
     sequelize,
-    modelName: 'Pointage',
-    tableName: 'pointages', 
-    underscored: true,
-    timestamps: true
+    tableName: 'pointages',
+    underscored: true
   });
 
-  Pointage.associate = (models) => {
-    Pointage.belongsTo(models.User, {
-      foreignKey: 'userId',
-      as: 'User'
-    });
+  Pointage.associate = models => {
+  Pointage.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+
   };
 
   return Pointage;

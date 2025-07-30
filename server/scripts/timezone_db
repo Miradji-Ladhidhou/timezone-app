@@ -44,3 +44,17 @@ CREATE TABLE dates_bloquees (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 6. TABLE : Heures supplémentaires (et récupération)
+CREATE TABLE heures_supp (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL, 
+  heures_normales INTEGER NOT NULL DEFAULT 420, 
+  heures_travaillees INTEGER NOT NULL, 
+  heures_supp INTEGER NOT NULL DEFAULT 0, 
+  heures_a_recuperer INTEGER NOT NULL DEFAULT 0, 
+  statut VARCHAR(20) DEFAULT 'non_recuperee' CHECK (statut IN ('non_recuperee', 'recuperee')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

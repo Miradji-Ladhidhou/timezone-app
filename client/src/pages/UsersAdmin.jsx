@@ -1,3 +1,4 @@
+// src/pages/UsersAdmin.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Container, Table, Button, Modal, Form, Row, Col, Card, Alert, Pagination
@@ -9,10 +10,10 @@ const UsersAdmin = () => {
   const { token } = useAuth();
 
   const [users, setUsers] = useState([]);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [tri, setTri] = useState({ colonne: 'createdAt', ordre: 'desc' });
   const [page, setPage] = useState(1);
   const parPage = 10;
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -21,10 +22,10 @@ const UsersAdmin = () => {
   const [role, setRole] = useState('');
   const [alert, setAlert] = useState('');
 
-  const handleResize = () => setIsMobile(window.innerWidth < 768);
   useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const resize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
   }, []);
 
   const fetchUsers = useCallback(async () => {
@@ -52,12 +53,10 @@ const UsersAdmin = () => {
   const usersTries = [...users].sort((a, b) => {
     let valA = a[tri.colonne]?.toString().toLowerCase() || '';
     let valB = b[tri.colonne]?.toString().toLowerCase() || '';
-
     if (tri.colonne === 'createdAt') {
       valA = new Date(a.createdAt);
       valB = new Date(b.createdAt);
     }
-
     if (valA < valB) return tri.ordre === 'asc' ? -1 : 1;
     if (valA > valB) return tri.ordre === 'asc' ? 1 : -1;
     return 0;

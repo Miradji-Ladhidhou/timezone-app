@@ -1,157 +1,154 @@
+const { Pointage, User } = require('../models');
 const { Op } = require('sequelize');
-const { Pointage } = require('../models');
 
-const CRENEAU_AUTORISE = {
-  null: ['entree'],
-  entree: ['pause', 'sortie'],
-  pause: ['reprise'],
-  reprise: ['pause', 'sortie'],
-  sortie: ['entree']
-};
-
+// Récupère ou crée une ligne de pointage du jour pour l'utilisateur
 const creerPointage = async (req, res) => {
   try {
-    const { type } = req.body;
+    const { type, date, heure } = req.body;
     const userId = req.user.id;
 
-    const dernier = await Pointage.findOne({
-      where: { userId },
-      order: [['horodatage', 'DESC']]
-    });
-
-    const dernierType = dernier ? dernier.type : null;
-    const suivantsPossibles = CRENEAU_AUTORISE[dernierType];
-
-    if (!suivantsPossibles.includes(type)) {
-      return res.status(400).json({
-        message: `Pointage "${type}" invalide après "${dernierType ?? 'aucun'}". Prochaine action autorisée : ${suivantsPossibles.join(' ou ')}`
-      });
+    if (!type || !date || !heure) {
+      return res.status(400).json({ message: 'Données incomplètes (type, date, heure)' });
     }
 
-    const pointage = await Pointage.create({ userId, type });
-    res.status(201).json({ message: 'Pointage enregistré', pointage });
+    const champsValides = ['entree', 'pause', 'reprise', 'sortie'];
+    if (!champsValides.includes(type)) {
+      return res.status(400).json({ message: 'Type de pointage invalide' });
+    }
+
+    // Vérifie s'il y a déjà une ligne pour ce jour et cet utilisateur
+    let pointage = await Pointage.findOne({ where: { user_id: userId, date } });
+
+    if (pointage) {
+      // Mise à jour du champ spécifique
+      pointage[type] = heure;
+      await pointage.save();
+      return res.status(200).json({ message: `Heure ${type} mise à jour`, pointage });
+    } else {
+      // Création avec le champ renseigné uniquement
+      const newData = { user_id: userId, date };
+      newData[type] = heure;
+
+      pointage = await Pointage.create(newData);
+      return res.status(201).json({ message: 'Pointage enregistré', pointage });
+    }
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erreur enregistrement pointage :', err);
+    res.status(500).json({ message: 'Erreur serveur', error: err.message });
+  }
+};
+
+// Liste des pointages de l'utilisateur connecté
+const listerMesPointages = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const pointages = await Pointage.findAll({
+      where: { user_id: userId },
+      order: [['date', 'DESC']]
+    });
+
+    res.json(pointages);
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', error: err.message });
+  }
+};
+
+// Liste de tous les pointages (admin uniquement)
+
+const listerTousLesPointages = async (req, res) => {
+  try {
+    const pointages = await Pointage.findAll({
+      order: [['date', 'DESC']],
+      include: {
+        model: User,
+        as:'user',
+        attributes: ['id', 'nom', 'email'] 
+      }
+    });
+
+    res.json(pointages);
+  } catch (err) {
+    console.error('Erreur listerTousLesPointages :', err); // Ajoute ce log
+    res.status(500).json({ message: 'Erreur serveur', error: err.message });
   }
 };
 
 
-const listerMesPointages = async (req, res) => {
-  const userId = req.user.id;
-
+const calculerHeuresTravaillees = async (req, res) => {
   try {
-    const pointages = await Pointage.findAll({
-      where: { userId },
-      order: [['horodatage', 'DESC']]
+    const userId = req.user.id;
+    const today = new Date().toISOString().split('T')[0];
+
+    const pointage = await Pointage.findOne({
+      where: { user_id: userId, date: today }
     });
-    res.json(pointages);
+
+    if (!pointage) {
+      return res.json({ dureeTravail: '0h00', totalMinutes: 0 });
+    }
+
+    const { entree, pause, reprise, sortie } = pointage;
+
+    let minutes = 0;
+
+    if (entree && sortie) {
+      const entreeDate = new Date(`${today}T${entree}`);
+      const sortieDate = new Date(`${today}T${sortie}`);
+      minutes = Math.floor((sortieDate - entreeDate) / 60000); // en minutes
+    }
+
+    // Retirer la pause si elle existe
+    if (pause && reprise) {
+      const pauseDate = new Date(`${today}T${pause}`);
+      const repriseDate = new Date(`${today}T${reprise}`);
+      const pauseMinutes = Math.floor((repriseDate - pauseDate) / 60000);
+      minutes -= pauseMinutes;
+    }
+
+    const heures = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    return res.json({
+      dureeTravail: `${heures}h${mins.toString().padStart(2, '0')}`,
+      totalMinutes: minutes
+    });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Erreur calcul heures travaillées :", err);
+    return res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 };
 
 const modifierPointage = async (req, res) => {
   try {
-    const pointage = await Pointage.findByPk(req.params.id);
-    if (!pointage) return res.status(404).json({ message: 'Pointage introuvable' });
+    const { id } = req.params;
+    const { entree, pause, reprise, sortie } = req.body;
 
-    const { type, horodatage } = req.body;
-    await pointage.update({ type, horodatage });
-    res.json({ message: 'Pointage mis à jour', pointage });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-const supprimerPointage = async (req, res) => {
-  try {
-    const pointage = await Pointage.findByPk(req.params.id);
-    if (!pointage) return res.status(404).json({ message: 'Pointage introuvable' });
-
-    await pointage.destroy();
-    res.json({ message: 'Pointage supprimé' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-const listerPointagesDuJour = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    // Début et fin du jour
-    const today = new Date();
-    const debut = new Date(today.setHours(0, 0, 0, 0));
-    const fin = new Date(today.setHours(23, 59, 59, 999));
-
-    const pointages = await Pointage.findAll({
-      where: {
-        userId,
-        horodatage: {
-          [Op.between]: [debut, fin]
-        }
-      },
-      order: [['horodatage', 'ASC']]
-    });
-
-    res.json({ pointages });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-const calculerHeuresTravaillees = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const today = new Date();
-    const debut = new Date(today.setHours(0, 0, 0, 0));
-    const fin = new Date(today.setHours(23, 59, 59, 999));
-
-    const pointages = await Pointage.findAll({
-      where: {
-        userId,
-        horodatage: { [Op.between]: [debut, fin] }
-      },
-      order: [['horodatage', 'ASC']]
-    });
-
-    let totalMs = 0;
-    let sessionStart = null;
-
-    for (const p of pointages) {
-      if (p.type === 'entree' || p.type === 'reprise') {
-        sessionStart = new Date(p.horodatage);
-      }
-
-      if ((p.type === 'pause' || p.type === 'sortie') && sessionStart) {
-        const sessionEnd = new Date(p.horodatage);
-        totalMs += sessionEnd - sessionStart;
-        sessionStart = null;
-      }
+    const pointage = await Pointage.findByPk(id);
+    if (!pointage) {
+      return res.status(404).json({ message: 'Pointage introuvable' });
     }
 
-    const heures = Math.floor(totalMs / 1000 / 60 / 60);
-    const minutes = Math.floor((totalMs / 1000 / 60) % 60);
+    pointage.entree = entree ?? pointage.entree;
+    pointage.pause = pause ?? pointage.pause;
+    pointage.reprise = reprise ?? pointage.reprise;
+    pointage.sortie = sortie ?? pointage.sortie;
 
-    res.json({
-      dureeTravail: `${heures}h${minutes < 10 ? '0' : ''}${minutes}`,
-      totalMinutes: Math.floor(totalMs / 1000 / 60),
-      totalMillisecondes: totalMs,
-      pointages
-    });
+    await pointage.save();
 
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(200).json({ message: '✅ Pointage mis à jour', pointage });
+  } catch (error) {
+    console.error('Erreur modification pointage :', error);
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
 
 
-
-
-module.exports = { creerPointage,  listerMesPointages: async (req, res) => {
-    const pointages = await Pointage.findAll({ where: { userId: req.user.id } });
-    res.json(pointages);
-  }, modifierPointage, supprimerPointage, listerPointagesDuJour, calculerHeuresTravaillees };
+module.exports = {
+  creerPointage,
+  listerMesPointages,
+  listerTousLesPointages,
+  calculerHeuresTravaillees,
+  modifierPointage
+};

@@ -13,6 +13,10 @@ import ContactPage from './pages/ContactPage';
 import CguPage from './pages/CguPage';
 import ConfidentialitePage from './pages/ConfidentialitePage';
 import MentionsLegalesPage from './pages/MentionsLegalesPage';
+import HeuresEmploye from './pages/HeuresEmploye';
+import HeuresAdmin from './pages/HeuresAdmin';
+import GestionPointage from './pages/GestionPointage';
+
 
 const App = () => {
   return (
@@ -32,6 +36,10 @@ const App = () => {
           <Route path="/cgu" element={<CguPage />} />
           <Route path="/confidentialite" element={<ConfidentialitePage />} />
           <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
+          <Route path="/heures-supp" element={<HeuresEmploye />} />
+          <Route path="/heures-suppGestion" element={<HeuresAdmin />} />
+          <Route path="/gestion-pointages" element={<GestionPointage />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

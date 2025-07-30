@@ -7,8 +7,8 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const CongeEmploye = () => {
   const { token, user } = useAuth();
-
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -24,13 +24,13 @@ const CongeEmploye = () => {
   const [fin, setFin] = useState('');
   const [motif, setMotif] = useState('');
   const [alert, setAlert] = useState('');
+  const [triMes, setTriMes] = useState({ colonne: 'createdAt', ordre: 'desc' });
   const [triValides, setTriValides] = useState({ colonne: 'createdAt', ordre: 'desc' });
-  const [pageValides, setPageValides] = useState(1);
   const [pageMes, setPageMes] = useState(1);
+  const [pageValides, setPageValides] = useState(1);
   const parPage = 10;
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(null);
-
 
   const fetchMesConges = useCallback(async () => {
     const res = await axios.get(`${process.env.REACT_APP_API_URL}/conges/mes`, {
@@ -68,84 +68,72 @@ const CongeEmploye = () => {
     }
   };
 
-  const handleTri = (colonne) => {
+  const handleTriMes = (colonne) => {
+    setTriMes(prev => ({
+      colonne,
+      ordre: prev.colonne === colonne && prev.ordre === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleTriValides = (colonne) => {
     setTriValides(prev => ({
       colonne,
       ordre: prev.colonne === colonne && prev.ordre === 'asc' ? 'desc' : 'asc'
     }));
   };
 
-  const congesValidesTries = [...congesValides].sort((a, b) => {
-    let valA = a[triValides.colonne], valB = b[triValides.colonne];
-    if (triValides.colonne === 'user.nom') {
-      valA = a.user?.nom?.toLowerCase() || '';
-      valB = b.user?.nom?.toLowerCase() || '';
-    } else if (['createdAt', 'dateDebut', 'dateFin'].includes(triValides.colonne)) {
-      valA = new Date(valA);
-      valB = new Date(valB);
-    } else {
-      valA = valA?.toString().toLowerCase() || '';
-      valB = valB?.toString().toLowerCase() || '';
-    }
+  const trier = (array, colonne, ordre, isUserNom = false) => {
+    return [...array].sort((a, b) => {
+      let valA = isUserNom ? a.user?.nom?.toLowerCase() || '' : a[colonne];
+      let valB = isUserNom ? b.user?.nom?.toLowerCase() || '' : b[colonne];
+      if (['createdAt', 'updatedAt', 'dateDebut', 'dateFin'].includes(colonne)) {
+        valA = new Date(valA);
+        valB = new Date(valB);
+      } else {
+        valA = valA?.toString().toLowerCase() || '';
+        valB = valB?.toString().toLowerCase() || '';
+      }
+      if (valA < valB) return ordre === 'asc' ? -1 : 1;
+      if (valA > valB) return ordre === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
 
-    if (valA < valB) return triValides.ordre === 'asc' ? -1 : 1;
-    if (valA > valB) return triValides.ordre === 'asc' ? 1 : -1;
-    return 0;
-  });
+  const mesCongesTries = trier(mesConges, triMes.colonne, triMes.ordre);
+  const congesValidesTries = trier(congesValides, triValides.colonne, triValides.ordre, triValides.colonne === 'user.nom');
 
-  const indexMes = (pageMes - 1) * parPage;
-  const mesPage = mesConges.slice(indexMes, indexMes + parPage);
-  const totalMes = Math.ceil(mesConges.length / parPage);
-
-  const indexValides = (pageValides - 1) * parPage;
-  const validesPage = congesValidesTries.slice(indexValides, indexValides + parPage);
-  const totalValides = Math.ceil(congesValidesTries.length / parPage);
+  const mesPage = mesCongesTries.slice((pageMes - 1) * parPage, pageMes * parPage);
+  const validesPage = congesValidesTries.slice((pageValides - 1) * parPage, pageValides * parPage);
 
   const handleDemande = async () => {
     setAlert('');
     const now = new Date().toISOString().split('T')[0];
-
     if (debut < now) return setAlert("La date de début ne peut pas être dans le passé.");
 
     const messages = [];
+    if (datesBloquees.some(date => debut <= date.dateFin && fin >= date.dateDebut))
+      messages.push("La période chevauche une date bloquée.");
+    if (mesConges.some(c => debut <= c.dateFin && fin >= c.dateDebut))
+      messages.push("Vous avez déjà une autre demande sur cette période.");
 
-    const bloquee = datesBloquees.some(date => debut <= date.dateFin && fin >= date.dateDebut);
-    if (bloquee) messages.push("La période chevauche une date bloquée.");
-
-    const doublon = mesConges.some(c => debut <= c.dateFin && fin >= c.dateDebut);
-    if (doublon) messages.push("Vous avez déjà une autre demande sur cette période.");
-
-    // Si conflit, demander confirmation
     if (messages.length > 0) {
       setPendingRequest({ type, dateDebut: debut, dateFin: fin, motif, messages });
       setShowConfirmation(true);
       return;
     }
 
-    // Sinon on envoie directement
     envoyerDemande({ type, dateDebut: debut, dateFin: fin, motif }, []);
   };
-
 
   const envoyerDemande = async (data, messages = []) => {
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/conges`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      setType('');
-      setDebut('');
-      setFin('');
-      setMotif('');
-      setShowModal(false);
-      setShowConfirmation(false);
-      setPendingRequest(null);
-
-      fetchMesConges();
-      fetchCongesValides();
-
-      const finalMessage = ["Demande envoyée."].concat(messages).join(' ');
-      setAlert(finalMessage);
+      setType(''); setDebut(''); setFin(''); setMotif('');
+      setShowModal(false); setShowConfirmation(false); setPendingRequest(null);
+      fetchMesConges(); fetchCongesValides();
+      setAlert(["Demande envoyée."].concat(messages).join(' '));
       setTimeout(() => setAlert(''), 8000);
     } catch (err) {
       console.error("Erreur demande congé:", err);
@@ -153,18 +141,23 @@ const CongeEmploye = () => {
     }
   };
 
-
+  const pagination = (total, page, setPage) => (
+    <Pagination className="mt-3 justify-content-center">
+      {[...Array(Math.ceil(total / parPage)).keys()].map(num => (
+        <Pagination.Item key={num + 1} active={num + 1 === page} onClick={() => setPage(num + 1)}>
+          {num + 1}
+        </Pagination.Item>
+      ))}
+    </Pagination>
+  );
 
   return (
     <Container className="mt-4">
+      {/* Confirmation */}
       <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirmation requise</Modal.Title>
-        </Modal.Header>
+        <Modal.Header closeButton><Modal.Title>Confirmation requise</Modal.Title></Modal.Header>
         <Modal.Body>
-          {pendingRequest?.messages?.map((m, i) => (
-            <p key={i}>{m}</p>
-          ))}
+          {pendingRequest?.messages?.map((m, i) => <p key={i}>{m}</p>)}
           <p>Souhaitez-vous continuer malgré ces avertissements ?</p>
         </Modal.Body>
         <Modal.Footer>
@@ -182,19 +175,19 @@ const CongeEmploye = () => {
         </Col>
       </Row>
 
-      {/* Mes congés */}
-      <h5 className="mt-3">Mes demandes</h5>
+      {/* Mes demandes */}
+      <h5>Mes demandes</h5>
       {!isMobile ? (
         <>
-          <Table bordered responsive>
+          <Table bordered hover responsive className="mt-2">
             <thead>
               <tr>
-                <th>Type</th>
-                <th>Début</th>
-                <th>Fin</th>
-                <th>Statut</th>
-                <th>Demandé le</th>
-                <th>Mis à jour</th>
+                <th onClick={() => handleTriMes('type')} style={{ cursor: 'pointer' }}>Type {triMes.colonne === 'type' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
+                <th onClick={() => handleTriMes('dateDebut')} style={{ cursor: 'pointer' }}>Début {triMes.colonne === 'dateDebut' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
+                <th onClick={() => handleTriMes('dateFin')} style={{ cursor: 'pointer' }}>Fin {triMes.colonne === 'dateFin' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
+                <th onClick={() => handleTriMes('statut')} style={{ cursor: 'pointer' }}>Statut {triMes.colonne === 'statut' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
+                <th onClick={() => handleTriMes('createdAt')} style={{ cursor: 'pointer' }}>Demandé le {triMes.colonne === 'createdAt' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
+                <th onClick={() => handleTriMes('updatedAt')} style={{ cursor: 'pointer' }}>Mis à jour {triMes.colonne === 'updatedAt' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
               </tr>
             </thead>
             <tbody>
@@ -210,13 +203,7 @@ const CongeEmploye = () => {
               ))}
             </tbody>
           </Table>
-          <Pagination>
-            {[...Array(totalMes).keys()].map(n => (
-              <Pagination.Item key={n} active={n + 1 === pageMes} onClick={() => setPageMes(n + 1)}>
-                {n + 1}
-              </Pagination.Item>
-            ))}
-          </Pagination>
+          {pagination(mesConges.length, pageMes, setPageMes)}
         </>
       ) : (
         <Row>
@@ -227,8 +214,8 @@ const CongeEmploye = () => {
                   <Card.Title>{c.type}</Card.Title>
                   <Card.Text>
                     Du {new Date(c.dateDebut).toLocaleDateString()} au {new Date(c.dateFin).toLocaleDateString()}<br />
-                    Demandé le {new Date(c.createdAt).toLocaleDateString()}<br />
-                    {badgeStatut(c.statut)}
+                    {badgeStatut(c.statut)}<br />
+                    Demandé le {new Date(c.createdAt).toLocaleDateString()}
                   </Card.Text>
                 </Card.Body>
               </Card>
@@ -261,19 +248,19 @@ const CongeEmploye = () => {
       <h5 className="mt-4">Congés validés (tous les employés)</h5>
       {!isMobile ? (
         <>
-          <Table bordered responsive>
+          <Table bordered hover responsive>
             <thead>
               <tr>
-                <th onClick={() => handleTri('user.nom')} style={{ cursor: 'pointer' }}>
+                <th onClick={() => handleTriValides('user.nom')} style={{ cursor: 'pointer' }}>
                   Employé {triValides.colonne === 'user.nom' && (triValides.ordre === 'asc' ? '▲' : '▼')}
                 </th>
-                <th onClick={() => handleTri('dateDebut')} style={{ cursor: 'pointer' }}>
+                <th onClick={() => handleTriValides('dateDebut')} style={{ cursor: 'pointer' }}>
                   Début {triValides.colonne === 'dateDebut' && (triValides.ordre === 'asc' ? '▲' : '▼')}
                 </th>
-                <th onClick={() => handleTri('dateFin')} style={{ cursor: 'pointer' }}>
+                <th onClick={() => handleTriValides('dateFin')} style={{ cursor: 'pointer' }}>
                   Fin {triValides.colonne === 'dateFin' && (triValides.ordre === 'asc' ? '▲' : '▼')}
                 </th>
-                <th onClick={() => handleTri('createdAt')} style={{ cursor: 'pointer' }}>
+                <th onClick={() => handleTriValides('createdAt')} style={{ cursor: 'pointer' }}>
                   Demandé le {triValides.colonne === 'createdAt' && (triValides.ordre === 'asc' ? '▲' : '▼')}
                 </th>
               </tr>
@@ -289,13 +276,7 @@ const CongeEmploye = () => {
               ))}
             </tbody>
           </Table>
-          <Pagination>
-            {[...Array(totalValides).keys()].map(n => (
-              <Pagination.Item key={n} active={n + 1 === pageValides} onClick={() => setPageValides(n + 1)}>
-                {n + 1}
-              </Pagination.Item>
-            ))}
-          </Pagination>
+          {pagination(congesValides.length, pageValides, setPageValides)}
         </>
       ) : (
         <Row>
@@ -305,7 +286,6 @@ const CongeEmploye = () => {
                 <Card.Body>
                   <Card.Title>{c.user?.nom}</Card.Title>
                   <Card.Text>
-                    Type : {c.type}<br />
                     Du {new Date(c.dateDebut).toLocaleDateString()} au {new Date(c.dateFin).toLocaleDateString()}<br />
                     Demandé le {new Date(c.createdAt).toLocaleDateString()}
                   </Card.Text>
