@@ -33,7 +33,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Congés</Card.Title>
               <Card.Text>Consulter, valider ou refuser les congés.</Card.Text>
-              <Button variant="warning" href="/conges">Gérer les congés</Button>
+              <Button variant="warning" href="/conges-gestion">Gérer les congés</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -73,7 +73,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Congés</Card.Title>
               <Card.Text>Validez ou refusez les congés des employés.</Card.Text>
-              <Button variant="warning" href="/conges">Gérer les congés</Button>
+              <Button variant="warning" href="/conges-gestion">Gérer les congés</Button>
             </Card.Body>
           </Card>
         </Col>

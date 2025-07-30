@@ -111,11 +111,11 @@ const HeuresAdmin = () => {
       <h3>🛠️ Gestion des heures supplémentaires</h3>
 
       <div className="d-flex justify-content-between align-items-center mt-3 mb-2">
-        <Button size="sm" variant="outline-success" onClick={exporterCSV}>
-          📁 Exporter CSV
-        </Button>
         <Button variant="outline-secondary" size="sm" onClick={() => setTriAsc(!triAsc)}>
           Trier par date {triAsc ? '🔼' : '🔽'}
+        </Button>
+        <Button size="sm" variant="outline-success" onClick={exporterCSV}>
+          📁 Exporter CSV
         </Button>
       </div>
 

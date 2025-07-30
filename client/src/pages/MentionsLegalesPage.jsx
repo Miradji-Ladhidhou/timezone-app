@@ -3,7 +3,7 @@ import { Container, Card } from 'react-bootstrap';
 
 const MentionsLegalesPage = () => {
   return (
-    <div className="bg-light py-5 min-vh-100">
+    <div className=" py-5 min-vh-100">
       <Container>
         <h1 className="text-center mb-4">📘 Mentions légales</h1>
 

@@ -28,7 +28,7 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="bg-light min-vh-100 py-5">
+    <div className="min-vh-100 py-5">
       <Container>
         <h1 className="text-center mb-3 fw-bold display-6">
           Bienvenue sur <span className="text-primary">TimeZone 🕒</span>
