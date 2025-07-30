@@ -1,5 +1,6 @@
-const { Pointage, User } = require('../models');
+const { Pointage, HeuresSupp, User } = require('../models');
 const { Op } = require('sequelize');
+const { creerHeuresSuppPourUtilisateur } = require('./heuresSuppController');
 
 // Récupère ou crée une ligne de pointage du jour pour l'utilisateur
 const creerPointage = async (req, res) => {
@@ -16,23 +17,24 @@ const creerPointage = async (req, res) => {
       return res.status(400).json({ message: 'Type de pointage invalide' });
     }
 
-    // Vérifie s'il y a déjà une ligne pour ce jour et cet utilisateur
     let pointage = await Pointage.findOne({ where: { user_id: userId, date } });
 
     if (pointage) {
-      // Mise à jour du champ spécifique
       pointage[type] = heure;
       await pointage.save();
-      return res.status(200).json({ message: `Heure ${type} mise à jour`, pointage });
     } else {
-      // Création avec le champ renseigné uniquement
       const newData = { user_id: userId, date };
       newData[type] = heure;
-
       pointage = await Pointage.create(newData);
-      return res.status(201).json({ message: 'Pointage enregistré', pointage });
     }
 
+    // ➕ Calcul heures supp uniquement après une sortie
+    if (type === 'sortie') {
+      console.log('📦 Appel de la fonction de calcul heures supp pour', date);
+      await creerHeuresSuppPourUtilisateur(userId, date);
+    }
+
+    return res.status(200).json({ message: 'Pointage enregistré', pointage });
   } catch (err) {
     console.error('Erreur enregistrement pointage :', err);
     res.status(500).json({ message: 'Erreur serveur', error: err.message });
@@ -62,8 +64,8 @@ const listerTousLesPointages = async (req, res) => {
       order: [['date', 'DESC']],
       include: {
         model: User,
-        as:'user',
-        attributes: ['id', 'nom', 'email'] 
+        as: 'user',
+        attributes: ['id', 'nom', 'email']
       }
     });
 

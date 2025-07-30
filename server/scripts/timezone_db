@@ -22,6 +22,18 @@ CREATE TABLE pointages (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE pointages (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  entree TIME,
+  pause TIME,
+  reprise TIME,
+  sortie TIME,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- 4. TABLE : Congés
 CREATE TABLE conges (
   id SERIAL PRIMARY KEY,

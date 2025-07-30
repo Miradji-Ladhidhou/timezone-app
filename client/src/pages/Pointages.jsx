@@ -5,19 +5,17 @@ import {
 } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Pointages = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [pointages, setPointages] = useState([]);
   const [type, setType] = useState('entree');
   const [heureManuelle, setHeureManuelle] = useState('');
   const [message, setMessage] = useState('');
   const [erreur, setErreur] = useState('');
-  const [duree, setDuree] = useState('');
-  const [heuresSupp, setHeuresSupp] = useState(0);
-  const [heuresARecup, setHeuresARecup] = useState(0);
   const [triAsc, setTriAsc] = useState(true);
-  const HEURES_NORMALES_MIN = 420;
 
   const fetchPointages = useCallback(async () => {
     try {
@@ -30,24 +28,9 @@ const Pointages = () => {
     }
   }, [token]);
 
-  const fetchHeures = useCallback(async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/pointages/duree/aujourdhui`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const total = res.data.totalMinutes || 0;
-      setDuree(res.data.dureeTravail);
-      setHeuresSupp(Math.max(0, total - HEURES_NORMALES_MIN));
-      setHeuresARecup(Math.max(0, HEURES_NORMALES_MIN - total));
-    } catch (err) {
-      console.error("Erreur calcul heures", err);
-    }
-  }, [token]);
-
   useEffect(() => {
     fetchPointages();
-    fetchHeures();
-  }, [fetchPointages, fetchHeures]);
+  }, [fetchPointages]);
 
   const ajouterPointage = async () => {
     try {
@@ -65,7 +48,6 @@ const Pointages = () => {
       setMessage('✅ Pointage ajouté');
       setHeureManuelle('');
       await fetchPointages();
-      await fetchHeures();
     } catch (err) {
       setErreur(err.response?.data?.message || 'Erreur lors du pointage');
     }
@@ -87,42 +69,15 @@ const Pointages = () => {
 
   return (
     <Container className="mt-4">
-      <h3>🕓 Suivi de mes pointages</h3>
-
-      {/* Résumé des heures */}
-      <Row className="mt-3 mb-4">
-        <Col md={4}>
-          <Card className="text-center border-success">
-            <Card.Body>
-              <Card.Title>⏱️ Temps travaillé</Card.Title>
-              <Card.Text><strong>{duree || '--'}</strong></Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card className="text-center border-primary">
-            <Card.Body>
-              <Card.Title>🔁 Heures supp.</Card.Title>
-              <Card.Text className={heuresSupp > 0 ? 'text-success' : 'text-muted'}>
-                {heuresSupp > 0 ? `${Math.floor(heuresSupp / 60)}h${heuresSupp % 60}` : 'Aucune'}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card className="text-center border-warning">
-            <Card.Body>
-              <Card.Title>📤 Heures à récupérer</Card.Title>
-              <Card.Text className={heuresARecup > 0 ? 'text-danger' : 'text-muted'}>
-                {heuresARecup > 0 ? `${Math.floor(heuresARecup / 60)}h${heuresARecup % 60}` : 'OK'}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <div className="d-flex justify-content-between align-items-center">
+        <h3>🕓 Suivi de mes pointages</h3>
+        <Button variant="outline-primary" size="sm" onClick={() => navigate('/heures-supp')}>
+          👀 Voir mes heures supp
+        </Button>
+      </div>
 
       {/* Formulaire d’ajout */}
-      <Card className="p-3 shadow-sm">
+      <Card className="p-3 shadow-sm mt-4">
         <h5>➕ Ajouter un pointage</h5>
         {message && <Alert variant="success" onClose={() => setMessage('')} dismissible>{message}</Alert>}
         {erreur && <Alert variant="danger" onClose={() => setErreur('')} dismissible>{erreur}</Alert>}

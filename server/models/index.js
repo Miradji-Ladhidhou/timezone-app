@@ -32,6 +32,16 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
+// Relations manuelles
+if (db.HeuresSupp && db.User) {
+  db.HeuresSupp.belongsTo(db.User, { foreignKey: 'user_id', as: 'utilisateur_heures' });
+}
+
+if (db.Pointage && db.User) {
+  db.Pointage.belongsTo(db.User, { foreignKey: 'user_id', as: 'utilisateur_pointage' });
+}
+
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
