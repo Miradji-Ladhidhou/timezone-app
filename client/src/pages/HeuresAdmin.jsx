@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
 const HeuresAdmin = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [heures, setHeures] = useState([]);
   const [page, setPage] = useState(1);
   const parPage = 10;
@@ -120,6 +120,7 @@ const HeuresAdmin = () => {
     return <Badge bg="secondary">-</Badge>;
   };
 
+
   return (
     <Container className="mt-4">
       <h3>🛠️ Gestion des heures supplémentaires</h3>
@@ -141,7 +142,7 @@ const HeuresAdmin = () => {
               <th>Récupérées</th>
               <th>Action</th>
               <th>Statut</th>
-              <th>Suppr.</th>
+              {user?.role === 'admin' && <th>Suppr</th>}
             </tr>
           </thead>
           <tbody>
@@ -181,9 +182,11 @@ const HeuresAdmin = () => {
                     )}
                   </td>
                   <td>{h.statut}</td>
-                  <td>
-                    <Button size="sm" variant="danger" onClick={() => handleDelete(h.id)}>🗑️</Button>
-                  </td>
+                  {user?.role === 'admin' && (
+                    <td>
+                      <Button size="sm" variant="danger" onClick={() => handleDelete(h.id)}>🗑️</Button>
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -227,7 +230,11 @@ const HeuresAdmin = () => {
                     ) : (
                       <div>{badgeStatut(restantes)}</div>
                     )}
-                    <Button className="mt-2" size="sm" variant="danger" onClick={() => handleDelete(h.id)}>🗑️ Supprimer</Button>
+                    {user?.role === 'admin' && (
+                      <Button className="mt-2" size="sm" variant="danger" onClick={() => handleDelete(h.id)}>
+                        🗑️ Supprimer
+                      </Button>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>

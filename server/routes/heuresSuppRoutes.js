@@ -18,7 +18,7 @@ router.post('/', creerHeuresSuppPourUtilisateur); // Calcul automatique (via poi
 router.put('/:id', majHeuresSupp);         // Modifier (statut, heures récupérées...)
 
 // Admin uniquement
-router.get('/', restrictTo('admin'), getAllHeuresSupp);         // Lister tout
+router.get('/', restrictTo('admin','secretaire'), getAllHeuresSupp);         // Lister tout
 router.delete('/:id', restrictTo('admin'), supprimerHeuresSupp); // Supprimer
 
 module.exports = router;

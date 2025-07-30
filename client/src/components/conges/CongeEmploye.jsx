@@ -108,15 +108,27 @@ const CongeEmploye = () => {
   const handleDemande = async () => {
     setAlert('');
     const now = new Date().toISOString().split('T')[0];
-    if (debut < now) return setAlert("La date de début ne peut pas être dans le passé.");
 
-    const messages = [];
-    if (datesBloquees.some(date => debut <= date.dateFin && fin >= date.dateDebut))
-      messages.push("La période chevauche une date bloquée.");
-    if (mesConges.some(c => debut <= c.dateFin && fin >= c.dateDebut))
-      messages.push("Vous avez déjà une autre demande sur cette période.");
+    // Dates invalides → bloquant
+    if (debut < now) return setAlert("❌ La date de début ne peut pas être dans le passé.");
+    if (debut > fin) return setAlert("❌ La date de début ne peut pas être après la date de fin.");
 
-    if (messages.length > 0) {
+    const messages = {
+      bloquees: '',
+      doublons: ''
+    };
+
+    if (datesBloquees.some(date => debut <= date.dateFin && fin >= date.dateDebut)) {
+      messages.bloquees = "⚠️ La période chevauche une ou plusieurs **dates bloquées**.";
+    }
+
+    if (mesConges.some(c => debut <= c.dateFin && fin >= c.dateDebut)) {
+      messages.doublons = "⚠️ Vous avez déjà une **demande sur cette période**.";
+    }
+
+    // Toujours confirmer si un avertissement est présent
+    const hasWarnings = Object.values(messages).some(msg => msg);
+    if (hasWarnings) {
       setPendingRequest({ type, dateDebut: debut, dateFin: fin, motif, messages });
       setShowConfirmation(true);
       return;
@@ -125,21 +137,29 @@ const CongeEmploye = () => {
     envoyerDemande({ type, dateDebut: debut, dateFin: fin, motif }, []);
   };
 
-  const envoyerDemande = async (data, messages = []) => {
-    try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/conges`, data, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setType(''); setDebut(''); setFin(''); setMotif('');
-      setShowModal(false); setShowConfirmation(false); setPendingRequest(null);
-      fetchMesConges(); fetchCongesValides();
-      setAlert(["Demande envoyée."].concat(messages).join(' '));
-      setTimeout(() => setAlert(''), 8000);
-    } catch (err) {
-      console.error("Erreur demande congé:", err);
-      setAlert("Une erreur est survenue.");
-    }
-  };
+const envoyerDemande = async (data, messages = {}) => {
+  try {
+    await axios.post(`${process.env.REACT_APP_API_URL}/conges`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // Reset
+    setType(''); setDebut(''); setFin(''); setMotif('');
+    setShowModal(false); setShowConfirmation(false); setPendingRequest(null);
+    fetchMesConges(); fetchCongesValides();
+
+    const messageFinal = "✅ Demande envoyée." +
+      (messages.bloquees ? ` ${messages.bloquees}` : '') +
+      (messages.doublons ? ` ${messages.doublons}` : '');
+
+    setAlert(messageFinal);
+    setTimeout(() => setAlert(''), 8000);
+  } catch (err) {
+    console.error("Erreur demande congé:", err);
+    setAlert("❌ Une erreur est survenue.");
+  }
+};
+
 
   const pagination = (total, page, setPage) => (
     <Pagination className="mt-3 justify-content-center">
@@ -154,19 +174,27 @@ const CongeEmploye = () => {
   return (
     <Container className="mt-4">
       {/* Confirmation */}
-      <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
-        <Modal.Header closeButton><Modal.Title>Confirmation requise</Modal.Title></Modal.Header>
-        <Modal.Body>
-          {pendingRequest?.messages?.map((m, i) => <p key={i}>{m}</p>)}
-          <p>Souhaitez-vous continuer malgré ces avertissements ?</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirmation(false)}>Annuler</Button>
-          <Button variant="warning" onClick={() => envoyerDemande(pendingRequest, pendingRequest.messages)}>
-            Oui, continuer
-          </Button>
-        </Modal.Footer>
-      </Modal>
+     <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
+  <Modal.Header closeButton>
+    <Modal.Title>⚠️ Confirmation requise</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    {pendingRequest?.messages?.bloquees && (
+      <Alert variant="warning">{pendingRequest.messages.bloquees}</Alert>
+    )}
+    {pendingRequest?.messages?.doublons && (
+      <Alert variant="danger">{pendingRequest.messages.doublons}</Alert>
+    )}
+    <p>Souhaitez-vous continuer malgré ces avertissements ?</p>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowConfirmation(false)}>Annuler</Button>
+    <Button variant="warning" onClick={() => envoyerDemande(pendingRequest, pendingRequest.messages)}>
+      Oui, continuer
+    </Button>
+  </Modal.Footer>
+</Modal>
+
 
       <Row className="mb-3">
         <Col><h3>Mes congés - {user?.nom}</h3></Col>

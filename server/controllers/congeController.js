@@ -9,6 +9,13 @@ const creerConge = async (req, res) => {
       return res.status(400).json({ message: "Impossible de poser un congé rétroactif." });
     }
 
+    if (new Date(dateDebut) > new Date(dateFin)) {
+      return res.status(400).json({
+        error: "La date de début ne peut pas être postérieure à la date de fin."
+      });
+    }
+
+
     // Vérifier si le congé chevauche une date bloquée
     const datesBloquees = await DatesBloquees.findAll({
       where: {
