@@ -5,7 +5,10 @@ const helmet = require('helmet');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: 'https://timezone-front.onrender.com',
+    credentials: true
+}));
 app.use(helmet());
 app.use(express.json());
 
