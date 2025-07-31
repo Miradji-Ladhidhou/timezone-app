@@ -1,0 +1,52 @@
+/* === Reset & Base === */
+body {
+  background-color: #f4f6f9;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #212529;
+}
+
+h1, h2, h3, h4, h5 {
+  color: #1c1c1c;
+  font-weight: 600;
+}
+
+/* === Navbar === */
+.navbar {
+  background-color: #1e1e2f;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  color: #ffffff ;
+}
+
+.navbar-nav .nav-link {
+  color: #dcdcdc ;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #ff0000 ;
+}
+
+.navbar-nav .nav-link.active {
+  font-weight: bold;
+  color: #ff0000 !important;
+  border-bottom: 2px solid #ffffff;
+}
+
+
+
+/* === Tables === */
+.table th {
+  background-color: #f1f3f5;
+  font-weight: 600;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+  text-align: center;
+}
+

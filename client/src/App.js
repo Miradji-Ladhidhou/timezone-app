@@ -18,6 +18,8 @@ import HeuresAdmin from './pages/Heures/HeuresAdmin';
 import GestionPointage from './pages/Pointages/GestionPointage';
 import PrivateRoute from './components/PrivateRoute';
 import Unauthorized from './components/unauthorized';
+import './styles/TimeZone.css';
+
 
 const App = () => {
   return (
