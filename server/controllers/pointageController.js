@@ -28,15 +28,15 @@ const creerPointage = async (req, res) => {
       pointage = await Pointage.create(newData);
     }
 
-    // ➕ Calcul heures supp uniquement après une sortie
+    // Calcul heures supp uniquement après une sortie
     if (type === 'sortie') {
-      console.log('📦 Appel de la fonction de calcul heures supp pour', date);
+      // console.log('Appel de la fonction de calcul heures supp pour', date);
       await creerHeuresSuppPourUtilisateur(userId, date);
     }
 
     return res.status(200).json({ message: 'Pointage enregistré', pointage });
   } catch (err) {
-    console.error('Erreur enregistrement pointage :', err);
+    // console.error('Erreur enregistrement pointage :', err);
     res.status(500).json({ message: 'Erreur serveur', error: err.message });
   }
 };
@@ -71,7 +71,7 @@ const listerTousLesPointages = async (req, res) => {
 
     res.json(pointages);
   } catch (err) {
-    console.error('Erreur listerTousLesPointages :', err); // Ajoute ce log
+    // console.error('Erreur listerTousLesPointages :', err);
     res.status(500).json({ message: 'Erreur serveur', error: err.message });
   }
 };
@@ -117,7 +117,7 @@ const calculerHeuresTravaillees = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Erreur calcul heures travaillées :", err);
+    // console.error("Erreur calcul heures travaillées :", err);
     return res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 };
@@ -139,9 +139,9 @@ const modifierPointage = async (req, res) => {
 
     await pointage.save();
 
-    res.status(200).json({ message: '✅ Pointage mis à jour', pointage });
+    res.status(200).json({ message: 'Pointage mis à jour', pointage });
   } catch (error) {
-    console.error('Erreur modification pointage :', error);
+    // console.error('Erreur modification pointage :', error);
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };

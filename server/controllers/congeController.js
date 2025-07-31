@@ -33,7 +33,7 @@ const creerConge = async (req, res) => {
     });
     const chevauchementDatesBloquees = datesBloquees.length > 0;
     if (chevauchementDatesBloquees) {
-      console.warn("⚠️ Chevauchement avec une date bloquée détecté.");
+      console.warn("Chevauchement avec une date bloquée détecté.");
     }
 
     // Vérifier les doublons de congé
@@ -53,7 +53,7 @@ const creerConge = async (req, res) => {
       }
     });
     if (doublon) {
-      console.warn("⚠️ Doublon de demande de congé détecté.");
+      console.warn("Doublon de demande de congé détecté.");
     }
     const conge = await Conge.create({
       userId: req.user.id,

@@ -8,7 +8,7 @@ const creerHeuresSuppPourUtilisateur = async (userId, date) => {
     const pointage = await Pointage.findOne({ where: { userId, date } });
 
     if (!pointage || !pointage.entree || !pointage.sortie) {
-      console.log('⛔ Données de pointage incomplètes', pointage);
+      // console.log('Données de pointage incomplètes', pointage);
       return;
     }
 
@@ -50,24 +50,63 @@ const creerHeuresSuppPourUtilisateur = async (userId, date) => {
       });
     }
 
-    console.log('✅ Heures supp enregistrées pour', date);
+    // console.log('Heures supp enregistrées pour', date);
   } catch (err) {
-    console.error('❌ Erreur calcul heures supp :', err);
+    // console.error('Erreur calcul heures supp :', err);
     throw err;
   }
 };
 
 const getMesHeuresSupp = async (req, res) => {
   try {
+    const userId = req.user.id;
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]; // -1 jour
+
+    // 🔍 Vérifier s'il y a des heures non récupérées hier
+    const heuresHier = await HeuresSupp.findOne({
+      where: {
+        userId,
+        date: yesterday,
+        heures_restantes: { [Op.gt]: 0 },
+        statut: 'non_recuperee'
+      }
+    });
+
+    // 🔍 Vérifier s'il y a déjà une ligne pour aujourd'hui
+    const dejaAujourdHui = await HeuresSupp.findOne({
+      where: { userId, date: today }
+    });
+
+    // 🛠️ Créer une ligne si nécessaire
+    if (heuresHier && !dejaAujourdHui) {
+      await HeuresSupp.create({
+        userId,
+        date: today,
+        heures_normales: 420,
+        heures_travaillees: 0,
+        heures_supp: 0,
+        heures_a_recuperer: heuresHier.heures_restantes,
+        heures_recuperees: 0,
+        heures_restantes: heuresHier.heures_restantes,
+        statut: 'non_recuperee'
+      });
+      // console.log(` Report automatique de ${heuresHier.heures_restantes} min sur ${today}`);
+    }
+
+    // Ensuite on renvoie les données comme avant
     const data = await HeuresSupp.findAll({
-      where: { userId: req.user.id },
+      where: { userId },
       order: [['date', 'DESC']]
     });
+
     res.json(data);
   } catch (err) {
+    // console.error("Erreur getMesHeuresSupp:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 const getAllHeuresSupp = async (req, res) => {
   try {
@@ -114,7 +153,7 @@ const majHeuresSupp = async (req, res) => {
 
     res.json(instance);
   } catch (err) {
-    console.error("Erreur majHeuresSupp:", err);
+    // console.error("Erreur majHeuresSupp:", err);
     res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 };

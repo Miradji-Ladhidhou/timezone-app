@@ -1,10 +1,9 @@
-// src/pages/Pointages.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container, Row, Col, Card, Button, Table, Form, Alert
 } from 'react-bootstrap';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Pointages = () => {
@@ -45,7 +44,7 @@ const Pointages = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setMessage('✅ Pointage ajouté');
+      setMessage('Pointage ajouté');
       setHeureManuelle('');
       await fetchPointages();
     } catch (err) {
@@ -70,15 +69,15 @@ const Pointages = () => {
   return (
     <Container className="mt-4">
       <div className="d-flex justify-content-between align-items-center">
-        <h3>🕓 Suivi de mes pointages</h3>
+        <h3>Suivi de mes pointages</h3>
         <Button variant="outline-primary" size="sm" onClick={() => navigate('/heures-supp')}>
-          👀 Voir mes heures supp
+          Voir mes heures supp
         </Button>
       </div>
 
       {/* Formulaire d’ajout */}
       <Card className="p-3 shadow-sm mt-4">
-        <h5>➕ Ajouter un pointage</h5>
+        <h5>Ajouter un pointage</h5>
         {message && <Alert variant="success" onClose={() => setMessage('')} dismissible>{message}</Alert>}
         {erreur && <Alert variant="danger" onClose={() => setErreur('')} dismissible>{erreur}</Alert>}
 
@@ -106,7 +105,7 @@ const Pointages = () => {
           </Col>
           <Col md={4}>
             <Button variant="primary" className="w-100" onClick={ajouterPointage}>
-              ➕ Valider
+              Valider
             </Button>
           </Col>
         </Row>
@@ -114,9 +113,9 @@ const Pointages = () => {
 
       {/* Historique */}
       <h5 className="mt-5 d-flex justify-content-between align-items-center">
-        📋 Historique
+        Historique
         <Button size="sm" variant="outline-secondary" onClick={() => setTriAsc(!triAsc)}>
-          Trier {triAsc ? '🔽' : '🔼'}
+          Trier {triAsc ? '▲' : '▼'}
         </Button>
       </h5>
 

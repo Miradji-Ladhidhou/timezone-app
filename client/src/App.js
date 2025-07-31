@@ -2,22 +2,22 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Auth/Login.jsx';
 import Register from './pages/Auth/Register';
-import Dashboard from './pages/Dashboard';
-import Pointages from './pages/Pointages';
-import CongeEmploye from './components/conges/CongeEmploye';
-import CongeGestion from './components/conges/CongeGestion';
-import HomePage from './pages/HomePage.jsx';
-import UsersAdmin from './pages/UsersAdmin';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import CguPage from './pages/CguPage';
-import ConfidentialitePage from './pages/ConfidentialitePage';
-import MentionsLegalesPage from './pages/MentionsLegalesPage';
-import HeuresEmploye from './pages/HeuresEmploye';
-import HeuresAdmin from './pages/HeuresAdmin';
-import GestionPointage from './pages/GestionPointage';
+import Dashboard from './components/Dashboard';
+import Pointages from './pages/Pointages/Pointages';
+import CongeEmploye from './pages/Conges/CongeEmploye';
+import CongeGestion from './pages/Conges/CongeGestion';
+import HomePage from './components/HomePage.jsx';
+import UsersAdmin from './pages/Users/UsersAdmin';
+import AboutPage from './pages/App/AboutPage';
+import ContactPage from './pages/App/ContactPage';
+import CguPage from './pages/App/CguPage';
+import ConfidentialitePage from './pages/App/ConfidentialitePage';
+import MentionsLegalesPage from './pages/App/MentionsLegalesPage';
+import HeuresEmploye from './pages/Heures/HeuresEmploye';
+import HeuresAdmin from './pages/Heures/HeuresAdmin';
+import GestionPointage from './pages/Pointages/GestionPointage';
 import PrivateRoute from './components/PrivateRoute';
-import Unauthorized from './pages/unauthorized';
+import Unauthorized from './components/unauthorized';
 
 const App = () => {
   return (

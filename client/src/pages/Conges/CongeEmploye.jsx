@@ -110,8 +110,8 @@ const CongeEmploye = () => {
     const now = new Date().toISOString().split('T')[0];
 
     // Dates invalides → bloquant
-    if (debut < now) return setAlert("❌ La date de début ne peut pas être dans le passé.");
-    if (debut > fin) return setAlert("❌ La date de début ne peut pas être après la date de fin.");
+    if (debut < now) return setAlert("La date de début ne peut pas être dans le passé.");
+    if (debut > fin) return setAlert("La date de début ne peut pas être après la date de fin.");
 
     const messages = {
       bloquees: '',
@@ -119,11 +119,11 @@ const CongeEmploye = () => {
     };
 
     if (datesBloquees.some(date => debut <= date.dateFin && fin >= date.dateDebut)) {
-      messages.bloquees = "⚠️ La période chevauche une ou plusieurs **dates bloquées**.";
+      messages.bloquees = "La période chevauche une ou plusieurs **dates bloquées**.";
     }
 
     if (mesConges.some(c => debut <= c.dateFin && fin >= c.dateDebut)) {
-      messages.doublons = "⚠️ Vous avez déjà une **demande sur cette période**.";
+      messages.doublons = "Vous avez déjà une **demande sur cette période**.";
     }
 
     // Toujours confirmer si un avertissement est présent
@@ -148,15 +148,14 @@ const envoyerDemande = async (data, messages = {}) => {
     setShowModal(false); setShowConfirmation(false); setPendingRequest(null);
     fetchMesConges(); fetchCongesValides();
 
-    const messageFinal = "✅ Demande envoyée." +
+    const messageFinal = "Demande envoyée." +
       (messages.bloquees ? ` ${messages.bloquees}` : '') +
       (messages.doublons ? ` ${messages.doublons}` : '');
 
     setAlert(messageFinal);
     setTimeout(() => setAlert(''), 8000);
   } catch (err) {
-    console.error("Erreur demande congé:", err);
-    setAlert("❌ Une erreur est survenue.");
+    setAlert("Une erreur est survenue.");
   }
 };
 
@@ -176,7 +175,7 @@ const envoyerDemande = async (data, messages = {}) => {
       {/* Confirmation */}
      <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
   <Modal.Header closeButton>
-    <Modal.Title>⚠️ Confirmation requise</Modal.Title>
+    <Modal.Title>Confirmation requise</Modal.Title>
   </Modal.Header>
   <Modal.Body>
     {pendingRequest?.messages?.bloquees && (

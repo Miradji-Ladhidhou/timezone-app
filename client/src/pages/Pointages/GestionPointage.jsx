@@ -3,12 +3,12 @@ import {
   Container, Table, Button, Form, Alert, Card, Row, Col, Pagination
 } from 'react-bootstrap';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const GestionPointage = () => {
   const { token } = useAuth();
   const [pointages, setPointages] = useState([]);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId] = useState(null);
   const [editedData, setEditedData] = useState({});
   const [message, setMessage] = useState('');
   const [erreur, setErreur] = useState('');
@@ -40,29 +40,6 @@ const GestionPointage = () => {
 
   const formaterDate = (d) => d.split('-').reverse().join('/');
 
-  const commencerEdition = (pointage) => {
-    setEditingId(pointage.id);
-    setEditedData({ ...pointage });
-  };
-
-  const annulerEdition = () => {
-    setEditingId(null);
-    setEditedData({});
-  };
-
-  const enregistrerModifications = async () => {
-    try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/pointages/admin/${editingId}`, editedData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMessage('✅ Modifications enregistrées');
-      setEditingId(null);
-      fetchPointages();
-    } catch (err) {
-      setErreur(err.response?.data?.message || 'Erreur modification');
-    }
-  };
-
   const trier = () => {
     return [...pointages].sort((a, b) => {
       return triAsc
@@ -90,13 +67,13 @@ const GestionPointage = () => {
 
   return (
     <Container className="mt-4">
-      <h3>📊 Gestion des pointages</h3>
+      <h3>Gestion des pointages</h3>
       {message && <Alert variant="success" onClose={() => setMessage('')} dismissible>{message}</Alert>}
       {erreur && <Alert variant="danger" onClose={() => setErreur('')} dismissible>{erreur}</Alert>}
 
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Button variant="outline-secondary" onClick={() => setTriAsc(!triAsc)}>
-          Trier par date {triAsc ? '🔼' : '🔽'}
+          Trier par date {triAsc ? '▲' : '▼'}
         </Button>
       </div>
 
@@ -111,7 +88,6 @@ const GestionPointage = () => {
                 <th>Pause</th>
                 <th>Reprise</th>
                 <th>Sortie</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -132,16 +108,6 @@ const GestionPointage = () => {
                       )}
                     </td>
                   ))}
-                  <td>
-                    {editingId === p.id ? (
-                      <>
-                        <Button size="sm" variant="success" onClick={enregistrerModifications}>💾</Button>{' '}
-                        <Button size="sm" variant="secondary" onClick={annulerEdition}>❌</Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline-primary" onClick={() => commencerEdition(p)}>✏️</Button>
-                    )}
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -171,14 +137,6 @@ const GestionPointage = () => {
                         )}
                       </p>
                     ))}
-                    {editingId === p.id ? (
-                      <>
-                        <Button size="sm" variant="success" onClick={enregistrerModifications}>💾</Button>{' '}
-                        <Button size="sm" variant="secondary" onClick={annulerEdition}>❌</Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline-primary" onClick={() => commencerEdition(p)}>✏️ Modifier</Button>
-                    )}
                   </Card.Body>
                 </Card>
               </Col>

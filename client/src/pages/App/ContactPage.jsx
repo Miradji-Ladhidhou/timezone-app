@@ -4,7 +4,7 @@ import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 const ContactPage = () => {
   return (
     <Container className="py-4">
-      <h2 className="text-center mb-4">Contactez-nous 📩</h2>
+      <h2 className="text-center mb-4">Contactez-nous</h2>
       <p className="text-center text-muted mb-4">
         Une question, un retour ou un souci ? Nous sommes là pour vous répondre rapidement.
       </p>

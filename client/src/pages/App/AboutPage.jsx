@@ -26,10 +26,10 @@ const AboutPage = () => {
             <Card.Body>
               <Card.Title className="fw-bold">🔧 Fonctionnalités clés</Card.Title>
               <ul className="text-muted small ps-3 mb-0">
-                <li>✅ Demande et suivi des congés</li>
-                <li>🕓 Pointage d'entrée / sortie journalier</li>
-                <li>📅 Visualisation des dates bloquées</li>
-                <li>🧑‍💼 Gestion des utilisateurs par rôles</li>
+                <li>Demande et suivi des congés</li>
+                <li>Pointage d'entrée / sortie journalier</li>
+                <li>Visualisation des dates bloquées</li>
+                <li>Gestion des utilisateurs par rôles</li>
               </ul>
             </Card.Body>
           </Card>
@@ -49,7 +49,7 @@ const AboutPage = () => {
         <Col xs={12} md={6}>
           <Card className="h-100 border-0 shadow-sm">
             <Card.Body>
-              <Card.Title className="fw-bold">🔐 Respect de la confidentialité</Card.Title>
+              <Card.Title className="fw-bold">Respect de la confidentialité</Card.Title>
               <Card.Text className="text-muted">
                 Vos données sont en sécurité. TimeZone respecte les normes de sécurité modernes et le RGPD.
               </Card.Text>
@@ -59,7 +59,7 @@ const AboutPage = () => {
       </Row>
 
       <div className="text-center mt-5 text-muted small">
-        📬 Une question ? Écrivez-nous à <a href="mailto:contact@timezone.app">contact@timezone.app</a>
+        Une question ? Écrivez-nous à <a href="mailto:contact@timezone.app">contact@timezone.app</a>
       </div>
     </Container>
   );

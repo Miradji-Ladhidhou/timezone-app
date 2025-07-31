@@ -1,10 +1,9 @@
-// src/pages/UsersAdmin.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Container, Table, Button, Modal, Form, Row, Col, Card, Alert, Pagination
 } from 'react-bootstrap';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const UsersAdmin = () => {
   const { token } = useAuth();
@@ -112,7 +111,7 @@ const UsersAdmin = () => {
 
   return (
     <Container className="mt-4">
-      <h3>👥 Gestion des utilisateurs</h3>
+      <h3>Gestion des utilisateurs</h3>
 
       {!isMobile ? (
         <>

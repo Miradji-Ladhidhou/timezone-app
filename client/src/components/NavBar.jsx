@@ -23,8 +23,8 @@ const NavBar = () => {
 
             {user?.role === 'employe' && (
               <>
-                <Nav.Link as={Link} to="/pointages">Mes pointages</Nav.Link>
                 <Nav.Link as={Link} to="/conges">Mes congés</Nav.Link>
+                <Nav.Link as={Link} to="/pointages">Mes pointages</Nav.Link>
                 <Nav.Link as={Link} to="/heures-supp">Mes heures-supp.</Nav.Link>
               </>
             )}
@@ -32,8 +32,8 @@ const NavBar = () => {
             {user?.role === 'secretaire' && (
               <>
                 <Nav.Link as={Link} to="/conges-gestion">Gérer congés</Nav.Link>
-                <Nav.Link as={Link} to="/heures-suppGestion">Gérer heures-supp</Nav.Link>
                 <Nav.Link as={Link} to="/gestion-pointages">Gérer pointages</Nav.Link>
+                <Nav.Link as={Link} to="/heures-suppGestion">Gérer heures-supp</Nav.Link>
 
               </>
             )}
@@ -42,8 +42,8 @@ const NavBar = () => {
               <>
                 <Nav.Link as={Link} to="/users">Gérer utilisateurs</Nav.Link>
                 <Nav.Link as={Link} to="/conges-gestion">Gérer congés</Nav.Link>
-                <Nav.Link as={Link} to="/heures-suppGestion">Gérer heures-supp</Nav.Link>
                 <Nav.Link as={Link} to="/gestion-pointages">Gérer pointages</Nav.Link>
+                <Nav.Link as={Link} to="/heures-suppGestion">Gérer heures-supp</Nav.Link>
               </>
             )}
           </Nav>

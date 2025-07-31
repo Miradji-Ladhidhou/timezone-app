@@ -1,4 +1,3 @@
-// src/pages/CongeGestion.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Container, Table, Button, Modal, Form, Badge, Row, Col, Alert, Card, Pagination
@@ -108,6 +107,34 @@ const CongeGestion = () => {
     return 'RAS';
   };
 
+  const exportCSV = () => {
+  if (!conges || conges.length === 0) return;
+
+  const lignes = conges.map(c => ({
+    Employe: c.user?.nom || '',
+    Type: c.type,
+    DateDebut: new Date(c.dateDebut).toLocaleDateString(),
+    DateFin: new Date(c.dateFin).toLocaleDateString(),
+    Statut: c.statut,
+    DemandeLe: new Date(c.createdAt).toLocaleDateString(),
+    Chevauchement: c.statut === 'en_attente' ? detecterChevauchement(c) : 'RAS',
+  }));
+
+  const header = Object.keys(lignes[0]).join(';');
+  const rows = lignes.map(obj => Object.values(obj).join(';'));
+  const csvContent = [header, ...rows].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "export_conges.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+
   const handleValidation = async (id, statut, motifRefus = null) => {
     try {
       await axios.put(`${process.env.REACT_APP_API_URL}/conges/${id}`, { statut, motifRefus }, {
@@ -178,7 +205,11 @@ const CongeGestion = () => {
 
   return (
     <Container className="mt-4">
-      <h3>📅 Gestion des congés</h3>
+      <div className="d-flex justify-content-between align-items-center">
+        <h3>Gestion des congés</h3>
+        <Button variant="outline-success" size="sm" onClick={exportCSV}>Exporter CSV</Button>
+      </div>
+
 
       {/* Table desktop */}
       {!isMobile ? (
@@ -229,7 +260,7 @@ const CongeGestion = () => {
                       </>
                     )}
                     {!['valide', 'refuse'].includes(c.statut) && (
-                      <Button size="sm" variant="outline-danger" onClick={() => deleteConge(c.id)}>🗑️</Button>
+                      <Button size="sm" variant="outline-danger" onClick={() => deleteConge(c.id)}>Supprimer</Button>
                     )}
                   </td>
                 </tr>
@@ -262,7 +293,7 @@ const CongeGestion = () => {
                     </>
                   )}
                   {!['valide', 'refuse'].includes(c.statut) && (
-                    <Button size="sm" variant="outline-danger" onClick={() => deleteConge(c.id)}>🗑️</Button>
+                    <Button size="sm" variant="outline-danger" onClick={() => deleteConge(c.id)}>Supprimer</Button>
                   )}
                 </Card.Body>
               </Card>
