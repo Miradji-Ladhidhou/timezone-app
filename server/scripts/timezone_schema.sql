@@ -16,15 +16,6 @@ CREATE TABLE users (
 CREATE TABLE pointages (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  type VARCHAR(20) NOT NULL CHECK (type IN ('entree', 'pause', 'reprise', 'sortie')),
-  horodatage TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE pointages (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   entree TIME,
   pause TIME,
@@ -38,7 +29,9 @@ CREATE TABLE pointages (
 CREATE TABLE conges (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  type VARCHAR(50) NOT NULL CHECK (type IN ('Congé annuel', 'RTT', 'Sans solde', 'Maladie', 'Congé maternité', 'Congé maternité')),
+  type VARCHAR(50) NOT NULL CHECK (type IN (
+    'Congé annuel', 'RTT', 'Sans solde', 'Maladie', 'Congé maternité', 'Congé paternité'
+  )),
   date_debut DATE NOT NULL,
   date_fin DATE NOT NULL,
   statut VARCHAR(20) NOT NULL DEFAULT 'en_attente' CHECK (statut IN ('en_attente', 'valide', 'refuse')),
@@ -52,12 +45,12 @@ CREATE TABLE dates_bloquees (
   id SERIAL PRIMARY KEY,
   date_debut DATE NOT NULL,
   date_fin DATE NOT NULL,
-  motif TEXT,
+  motif VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. TABLE : Heures supplémentaires (et récupération)
+-- 6. TABLE : Heures supplémentaires
 CREATE TABLE heures_supp (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -66,6 +59,8 @@ CREATE TABLE heures_supp (
   heures_travaillees INTEGER NOT NULL, 
   heures_supp INTEGER NOT NULL DEFAULT 0, 
   heures_a_recuperer INTEGER NOT NULL DEFAULT 0, 
+  heures_recuperees INTEGER NOT NULL DEFAULT 0,
+  heures_restantes INTEGER GENERATED ALWAYS AS (GREATEST((heures_supp - heures_recuperees), 0)) STORED, 
   statut VARCHAR(20) DEFAULT 'non_recuperee' CHECK (statut IN ('non_recuperee', 'recuperee')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -142,7 +142,7 @@ const HeuresEmploye = () => {
                           size="sm"
                           className="mt-1"
                           onClick={() => handleUpdateRecuperee(h.id)}
-                        ></Button>
+                        >Validé</Button>
                       </>
                     ) : (
                       badgeStatut(restantes * 60)

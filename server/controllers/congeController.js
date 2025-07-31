@@ -41,9 +41,6 @@ const creerConge = async (req, res) => {
       }
     });
     const chevauchementDatesBloquees = datesBloquees.length > 0;
-    if (chevauchementDatesBloquees) {
-      console.warn("Chevauchement avec une date bloquée détecté.");
-    }
 
     // Vérifie doublon de congé
     const doublon = await Conge.findOne({
@@ -61,10 +58,9 @@ const creerConge = async (req, res) => {
         ]
       }
     });
-    if (doublon) {
-      console.warn("Doublon de demande de congé détecté.");
-    }
+    const estDoublon = !!doublon;
 
+    // Enregistrement même s'il y a conflit
     const conge = await Conge.create({
       userId: req.user.id,
       type,
@@ -72,16 +68,21 @@ const creerConge = async (req, res) => {
       dateFin
     });
 
-    return res.status(201).json({
-      message: chevauchementDatesBloquees
-        ? "Demande enregistrée, mais elle chevauche une date bloquée. En attente de validation."
-        : "Demande enregistrée avec succès.",
-      conge
-    });
+    let message = "Demande enregistrée avec succès.";
+    if (chevauchementDatesBloquees && estDoublon) {
+      message = "Demande enregistrée, mais elle chevauche une date bloquée ET un autre congé existant.";
+    } else if (chevauchementDatesBloquees) {
+      message = "Demande enregistrée, mais elle chevauche une date bloquée.";
+    } else if (estDoublon) {
+      message = "Demande enregistrée, mais elle chevauche une autre demande de congé.";
+    }
+
+    return res.status(201).json({ message, conge });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 /**
  * @function miseAJourStatut
