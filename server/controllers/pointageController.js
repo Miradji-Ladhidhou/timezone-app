@@ -2,7 +2,16 @@ const { Pointage, HeuresSupp, User } = require('../models');
 const { Op } = require('sequelize');
 const { creerHeuresSuppPourUtilisateur } = require('./heuresSuppController');
 
-// Récupère ou crée une ligne de pointage du jour pour l'utilisateur
+/**
+ * @function creerPointage
+ * @description Crée ou met à jour un pointage pour l'utilisateur connecté. Déclenche le calcul des heures supp si type = "sortie".
+ * @route POST /api/pointages
+ * @access Employé
+ * @param {Object} req.body - Contient { type, date, heure }
+ * @returns {Object} 200 - Pointage enregistré
+ * @returns {Object} 400 - Données manquantes ou type invalide
+ * @returns {Object} 500 - Erreur serveur
+ */
 const creerPointage = async (req, res) => {
   try {
     const { type, date, heure } = req.body;
@@ -28,20 +37,24 @@ const creerPointage = async (req, res) => {
       pointage = await Pointage.create(newData);
     }
 
-    // Calcul heures supp uniquement après une sortie
     if (type === 'sortie') {
-      // console.log('Appel de la fonction de calcul heures supp pour', date);
       await creerHeuresSuppPourUtilisateur(userId, date);
     }
 
     return res.status(200).json({ message: 'Pointage enregistré', pointage });
   } catch (err) {
-    // console.error('Erreur enregistrement pointage :', err);
     res.status(500).json({ message: 'Erreur serveur', error: err.message });
   }
 };
 
-// Liste des pointages de l'utilisateur connecté
+/**
+ * @function listerMesPointages
+ * @description Récupère tous les pointages de l’utilisateur connecté
+ * @route GET /api/pointages
+ * @access Employé
+ * @returns {Array<Object>} 200 - Liste des pointages
+ * @returns {Object} 500 - Erreur serveur
+ */
 const listerMesPointages = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -56,8 +69,14 @@ const listerMesPointages = async (req, res) => {
   }
 };
 
-// Liste de tous les pointages (admin uniquement)
-
+/**
+ * @function listerTousLesPointages
+ * @description Récupère tous les pointages de tous les utilisateurs (admin uniquement)
+ * @route GET /api/pointages/tous
+ * @access Admin
+ * @returns {Array<Object>} 200 - Liste des pointages avec nom/email utilisateur
+ * @returns {Object} 500 - Erreur serveur
+ */
 const listerTousLesPointages = async (req, res) => {
   try {
     const pointages = await Pointage.findAll({
@@ -71,12 +90,18 @@ const listerTousLesPointages = async (req, res) => {
 
     res.json(pointages);
   } catch (err) {
-    // console.error('Erreur listerTousLesPointages :', err);
     res.status(500).json({ message: 'Erreur serveur', error: err.message });
   }
 };
 
-
+/**
+ * @function calculerHeuresTravaillees
+ * @description Calcule les heures travaillées du jour pour l’utilisateur connecté
+ * @route GET /api/pointages/duree/aujourdhui
+ * @access Employé
+ * @returns {Object} 200 - Durée totale en HH:mm + total minutes
+ * @returns {Object} 500 - Erreur serveur
+ */
 const calculerHeuresTravaillees = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -97,10 +122,9 @@ const calculerHeuresTravaillees = async (req, res) => {
     if (entree && sortie) {
       const entreeDate = new Date(`${today}T${entree}`);
       const sortieDate = new Date(`${today}T${sortie}`);
-      minutes = Math.floor((sortieDate - entreeDate) / 60000); // en minutes
+      minutes = Math.floor((sortieDate - entreeDate) / 60000);
     }
 
-    // Retirer la pause si elle existe
     if (pause && reprise) {
       const pauseDate = new Date(`${today}T${pause}`);
       const repriseDate = new Date(`${today}T${reprise}`);
@@ -117,11 +141,20 @@ const calculerHeuresTravaillees = async (req, res) => {
     });
 
   } catch (err) {
-    // console.error("Erreur calcul heures travaillées :", err);
     return res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 };
 
+/**
+ * @function modifierPointage
+ * @description Met à jour un pointage existant (admin uniquement)
+ * @route PUT /api/pointages/:id
+ * @access Admin
+ * @param {Object} req.body - Peut contenir entree, pause, reprise, sortie
+ * @returns {Object} 200 - Pointage mis à jour
+ * @returns {Object} 404 - Pointage introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
 const modifierPointage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -141,11 +174,9 @@ const modifierPointage = async (req, res) => {
 
     res.status(200).json({ message: 'Pointage mis à jour', pointage });
   } catch (error) {
-    // console.error('Erreur modification pointage :', error);
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
-
 
 module.exports = {
   creerPointage,

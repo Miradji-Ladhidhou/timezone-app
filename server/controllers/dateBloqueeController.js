@@ -1,10 +1,26 @@
 const { DatesBloquees } = require('../models');
 
+/**
+ * @function listerDates
+ * @description Récupère toutes les dates bloquées
+ * @route GET /api/dates-bloquees
+ * @access Admin / Secrétaire / Employé (lecture seule)
+ * @returns {Array<Object>} 200 - Liste des dates bloquées
+ */
 const listerDates = async (req, res) => {
   const dates = await DatesBloquees.findAll();
   res.json(dates);
 };
 
+/**
+ * @function creerDate
+ * @description Crée une nouvelle période bloquée (admin ou secrétaire)
+ * @route POST /api/dates-bloquees
+ * @access Admin / Secrétaire
+ * @param {Object} req.body - Contient dateDebut, dateFin, motif
+ * @returns {Object} 201 - Date bloquée créée
+ * @returns {Object} 500 - Erreur serveur
+ */
 const creerDate = async (req, res) => {
   try {
     const { dateDebut, dateFin, motif } = req.body;
@@ -15,6 +31,16 @@ const creerDate = async (req, res) => {
   }
 };
 
+/**
+ * @function mettreAJourDate
+ * @description Met à jour une période bloquée existante par son ID
+ * @route PUT /api/dates-bloquees/:id
+ * @access Admin / Secrétaire
+ * @param {Object} req.body - Contient dateDebut, dateFin, motif
+ * @returns {Object} 200 - Date bloquée mise à jour
+ * @returns {Object} 404 - Date introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
 const mettreAJourDate = async (req, res) => {
   try {
     const { id } = req.params;
@@ -29,6 +55,15 @@ const mettreAJourDate = async (req, res) => {
   }
 };
 
+/**
+ * @function supprimerDate
+ * @description Supprime une période bloquée existante
+ * @route DELETE /api/dates-bloquees/:id
+ * @access Admin / Secrétaire
+ * @returns {Object} 200 - Message de confirmation
+ * @returns {Object} 404 - Date introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
 const supprimerDate = async (req, res) => {
   try {
     const { id } = req.params;

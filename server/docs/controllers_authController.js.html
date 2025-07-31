@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: controllers/authController.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: controllers/authController.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const { User } = require('../models');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+/**
+ * @function register
+ * @description Inscription d’un nouvel utilisateur
+ * @route POST /api/auth/register
+ * @param {Object} req - Requête Express contenant { nom, email, motDePasse, role }
+ * @param {Object} res - Réponse Express
+ * @returns {Object} 201 - Utilisateur créé
+ * @returns {Object} 400 - Erreur lors de la création
+ */
+const register = async (req, res) => {
+  try {
+    const { nom, email, motDePasse, role } = req.body;
+    const hashedPassword = await bcrypt.hash(motDePasse, 10);
+
+    const user = await User.create({
+      nom,
+      email,
+      motDePasse: hashedPassword,
+      role
+    });
+
+    res.status(201).json({ message: 'Utilisateur créé', user });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+/**
+ * @function login
+ * @description Connexion utilisateur avec email et mot de passe
+ * @route POST /api/auth/login
+ * @param {Object} req - Requête Express contenant { email, motDePasse }
+ * @param {Object} res - Réponse Express
+ * @returns {Object} 200 - JWT + infos utilisateur
+ * @returns {Object} 404 - Utilisateur non trouvé
+ * @returns {Object} 401 - Mot de passe invalide
+ * @returns {Object} 500 - Erreur serveur
+ */
+const login = async (req, res) => {
+  try {
+    const { email, motDePasse } = req.body;
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+
+    const isMatch = await bcrypt.compare(motDePasse, user.motDePasse);
+    if (!isMatch) return res.status(401).json({ message: 'Mot de passe invalide' });
+
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '2h'
+    });
+
+    res.status(200).json({
+      token,
+      user: {
+        id: user.id,
+        nom: user.nom,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function getMe
+ * @description Récupère les informations du user connecté
+ * @route GET /api/auth/me
+ * @param {Object} req - Requête Express avec req.user (JWT décodé)
+ * @param {Object} res - Réponse Express
+ * @returns {Object} 200 - Infos utilisateur
+ * @returns {Object} 404 - Utilisateur non trouvé
+ * @returns {Object} 500 - Erreur serveur
+ */
+const getMe = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'nom', 'email', 'role'],
+    });
+
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { register, login, getMe };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#calculerHeuresTravaillees">calculerHeuresTravaillees</a></li><li><a href="global.html#congesValides">congesValides</a></li><li><a href="global.html#creerConge">creerConge</a></li><li><a href="global.html#creerDate">creerDate</a></li><li><a href="global.html#creerHeuresSuppPourUtilisateur">creerHeuresSuppPourUtilisateur</a></li><li><a href="global.html#creerPointage">creerPointage</a></li><li><a href="global.html#deleteUser">deleteUser</a></li><li><a href="global.html#exportPointagesCSV">exportPointagesCSV</a></li><li><a href="global.html#getAllHeuresSupp">getAllHeuresSupp</a></li><li><a href="global.html#getAllUsers">getAllUsers</a></li><li><a href="global.html#getMe">getMe</a></li><li><a href="global.html#getMesHeuresSupp">getMesHeuresSupp</a></li><li><a href="global.html#getUserById">getUserById</a></li><li><a href="global.html#listerDates">listerDates</a></li><li><a href="global.html#listerMesPointages">listerMesPointages</a></li><li><a href="global.html#listerTousLesPointages">listerTousLesPointages</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#majHeuresSupp">majHeuresSupp</a></li><li><a href="global.html#mesConges">mesConges</a></li><li><a href="global.html#mettreAJourDate">mettreAJourDate</a></li><li><a href="global.html#miseAJourStatut">miseAJourStatut</a></li><li><a href="global.html#modifierPointage">modifierPointage</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#sequelize">sequelize</a></li><li><a href="global.html#supprimerConge">supprimerConge</a></li><li><a href="global.html#supprimerDate">supprimerDate</a></li><li><a href="global.html#supprimerHeuresSupp">supprimerHeuresSupp</a></li><li><a href="global.html#tousLesConges">tousLesConges</a></li><li><a href="global.html#updateUser">updateUser</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Jul 31 2025 14:52:37 GMT+0400 (heure de La Réunion)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

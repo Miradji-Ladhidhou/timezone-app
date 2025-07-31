@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: controllers/congeController.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: controllers/congeController.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const { Conge, DatesBloquees, User } = require('../models');
+const { Op } = require('sequelize');
+
+/**
+ * @function creerConge
+ * @description Crée une demande de congé pour l'utilisateur connecté
+ * @route POST /api/conges
+ * @access Employé
+ * @param {Object} req.body - Contient type, dateDebut, dateFin
+ * @returns {Object} 201 - Congé créé (même en cas de chevauchement ou doublon)
+ * @returns {Object} 400 - Erreur de validation
+ * @returns {Object} 500 - Erreur serveur
+ */
+const creerConge = async (req, res) => {
+  try {
+    const { type, dateDebut, dateFin } = req.body;
+
+    if (new Date(dateDebut) &lt; new Date().setHours(0, 0, 0, 0)) {
+      return res.status(400).json({ message: "Impossible de poser un congé rétroactif." });
+    }
+
+    if (new Date(dateDebut) > new Date(dateFin)) {
+      return res.status(400).json({
+        error: "La date de début ne peut pas être postérieure à la date de fin."
+      });
+    }
+
+    // Vérifie chevauchement avec dates bloquées
+    const datesBloquees = await DatesBloquees.findAll({
+      where: {
+        [Op.or]: [
+          { dateDebut: { [Op.between]: [dateDebut, dateFin] } },
+          { dateFin: { [Op.between]: [dateDebut, dateFin] } },
+          {
+            [Op.and]: [
+              { dateDebut: { [Op.lte]: dateDebut } },
+              { dateFin: { [Op.gte]: dateFin } }
+            ]
+          }
+        ]
+      }
+    });
+    const chevauchementDatesBloquees = datesBloquees.length > 0;
+    if (chevauchementDatesBloquees) {
+      console.warn("Chevauchement avec une date bloquée détecté.");
+    }
+
+    // Vérifie doublon de congé
+    const doublon = await Conge.findOne({
+      where: {
+        userId: req.user.id,
+        [Op.or]: [
+          { dateDebut: { [Op.between]: [dateDebut, dateFin] } },
+          { dateFin: { [Op.between]: [dateDebut, dateFin] } },
+          {
+            [Op.and]: [
+              { dateDebut: { [Op.lte]: dateDebut } },
+              { dateFin: { [Op.gte]: dateFin } }
+            ]
+          }
+        ]
+      }
+    });
+    if (doublon) {
+      console.warn("Doublon de demande de congé détecté.");
+    }
+
+    const conge = await Conge.create({
+      userId: req.user.id,
+      type,
+      dateDebut,
+      dateFin
+    });
+
+    return res.status(201).json({
+      message: chevauchementDatesBloquees
+        ? "Demande enregistrée, mais elle chevauche une date bloquée. En attente de validation."
+        : "Demande enregistrée avec succès.",
+      conge
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function miseAJourStatut
+ * @description Met à jour le statut d’un congé (admin ou secrétaire)
+ * @route PUT /api/conges/:id
+ * @access Admin / Secrétaire
+ * @param {Object} req.body - Contient le nouveau statut et éventuellement un motif de refus
+ * @returns {Object} 200 - Congé mis à jour
+ * @returns {Object} 400 - Motif requis si refus
+ * @returns {Object} 404 - Congé introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
+const miseAJourStatut = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { statut, motifRefus } = req.body;
+
+    const conge = await Conge.findByPk(id);
+    if (!conge) return res.status(404).json({ message: 'Congé introuvable' });
+
+    if (statut === 'refuse' &amp;&amp; !motifRefus) {
+      return res.status(400).json({ message: "Un motif de refus est requis." });
+    }
+
+    conge.statut = statut;
+    conge.motifRefus = statut === 'refuse' ? motifRefus : null;
+    await conge.save();
+
+    res.json(conge);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function supprimerConge
+ * @description Supprime un congé si son statut est "en_attente"
+ * @route DELETE /api/conges/:id
+ * @access Admin / Secrétaire
+ * @returns {Object} 200 - Message de confirmation
+ * @returns {Object} 400 - Impossible de supprimer un congé validé ou refusé
+ * @returns {Object} 404 - Congé introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
+const supprimerConge = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const conge = await Conge.findByPk(id);
+
+    if (!conge) return res.status(404).json({ message: "Congé introuvable." });
+
+    if (conge.statut !== 'en_attente') {
+      return res.status(400).json({ message: "Seuls les congés en attente peuvent être supprimés." });
+    }
+
+    await conge.destroy();
+    res.json({ message: "Congé supprimé avec succès." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function mesConges
+ * @description Récupère tous les congés de l’utilisateur connecté
+ * @route GET /api/conges/mes
+ * @access Employé
+ * @returns {Array&lt;Object>} 200 - Liste de ses congés
+ */
+const mesConges = async (req, res) => {
+  const conges = await Conge.findAll({ where: { userId: req.user.id } });
+  res.json(conges);
+};
+
+/**
+ * @function congesValides
+ * @description Récupère tous les congés validés (lecture seule pour tous)
+ * @route GET /api/conges/valides
+ * @access Public (authentifié)
+ * @returns {Array&lt;Object>} 200 - Liste des congés validés
+ */
+const congesValides = async (req, res) => {
+  const conges = await Conge.findAll({
+    where: { statut: 'valide' },
+    include: { model: User, as: 'user', attributes: ['nom'] }
+  });
+  res.json(conges);
+};
+
+/**
+ * @function tousLesConges
+ * @description Récupère tous les congés avec utilisateur inclus (admin ou secrétaire)
+ * @route GET /api/conges
+ * @access Admin / Secrétaire
+ * @returns {Array&lt;Object>} 200 - Liste complète des congés
+ */
+const tousLesConges = async (req, res) => {
+  const conges = await Conge.findAll({ include: { model: User, as: 'user' } });
+  res.json(conges);
+};
+
+module.exports = {
+  creerConge,
+  miseAJourStatut,
+  supprimerConge,
+  mesConges,
+  congesValides,
+  tousLesConges
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#calculerHeuresTravaillees">calculerHeuresTravaillees</a></li><li><a href="global.html#congesValides">congesValides</a></li><li><a href="global.html#creerConge">creerConge</a></li><li><a href="global.html#creerDate">creerDate</a></li><li><a href="global.html#creerHeuresSuppPourUtilisateur">creerHeuresSuppPourUtilisateur</a></li><li><a href="global.html#creerPointage">creerPointage</a></li><li><a href="global.html#deleteUser">deleteUser</a></li><li><a href="global.html#exportPointagesCSV">exportPointagesCSV</a></li><li><a href="global.html#getAllHeuresSupp">getAllHeuresSupp</a></li><li><a href="global.html#getAllUsers">getAllUsers</a></li><li><a href="global.html#getMe">getMe</a></li><li><a href="global.html#getMesHeuresSupp">getMesHeuresSupp</a></li><li><a href="global.html#getUserById">getUserById</a></li><li><a href="global.html#listerDates">listerDates</a></li><li><a href="global.html#listerMesPointages">listerMesPointages</a></li><li><a href="global.html#listerTousLesPointages">listerTousLesPointages</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#majHeuresSupp">majHeuresSupp</a></li><li><a href="global.html#mesConges">mesConges</a></li><li><a href="global.html#mettreAJourDate">mettreAJourDate</a></li><li><a href="global.html#miseAJourStatut">miseAJourStatut</a></li><li><a href="global.html#modifierPointage">modifierPointage</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#sequelize">sequelize</a></li><li><a href="global.html#supprimerConge">supprimerConge</a></li><li><a href="global.html#supprimerDate">supprimerDate</a></li><li><a href="global.html#supprimerHeuresSupp">supprimerHeuresSupp</a></li><li><a href="global.html#tousLesConges">tousLesConges</a></li><li><a href="global.html#updateUser">updateUser</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Jul 31 2025 14:52:37 GMT+0400 (heure de La Réunion)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

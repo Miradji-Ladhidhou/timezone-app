@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: models/heures_supp.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: models/heures_supp.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+const { Model, DataTypes } = require('sequelize');
+
+/**
+ * @typedef {Object} HeuresSupp
+ * @property {number} userId - ID de l'utilisateur
+ * @property {string} date - Date de la ligne d’heures supplémentaires (YYYY-MM-DD)
+ * @property {number} heures_normales - Durée de travail attendue en minutes (ex : 420 = 7h)
+ * @property {number} heures_travaillees - Temps réellement travaillé en minutes
+ * @property {number} heures_supp - Heures supplémentaires effectuées (au-delà des normales)
+ * @property {number} heures_a_recuperer - Heures à récupérer (si en-dessous des normales)
+ * @property {number} heures_recuperees - Heures déjà récupérées
+ * @property {number} heures_restantes - Heures restantes à récupérer (auto-calculées)
+ * @property {string} statut - Statut de récupération : 'non_recuperee' ou 'recuperee'
+ * @property {Date} created_at - Date de création
+ * @property {Date} updated_at - Dernière mise à jour
+ */
+
+module.exports = (sequelize) => {
+  class HeuresSupp extends Model { }
+
+  HeuresSupp.init({
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'user_id'
+    },
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false
+    },
+    heures_normales: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 420
+    },
+    heures_travaillees: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    heures_supp: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    heures_a_recuperer: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    heures_recuperees: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    heures_restantes: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      get() {
+        return this.getDataValue('heures_restantes');
+      },
+      set() {
+        throw new Error('Impossible de modifier heures_restantes car elle est générée par la base.');
+      }
+    },
+    statut: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'non_recuperee',
+      validate: {
+        isIn: [['non_recuperee', 'recuperee']]
+      }
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+    }
+  }, {
+    sequelize,
+    modelName: 'HeuresSupp',
+    tableName: 'heures_supp',
+    timestamps: false,
+    underscored: true
+  });
+
+  /**
+   * Association avec le modèle User
+   * @memberof HeuresSupp
+   */
+  HeuresSupp.associate = (models) => {
+    HeuresSupp.belongsTo(models.User, {
+      foreignKey: 'user_id',
+      as: 'User'
+    });
+  };
+
+  return HeuresSupp;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#calculerHeuresTravaillees">calculerHeuresTravaillees</a></li><li><a href="global.html#congesValides">congesValides</a></li><li><a href="global.html#creerConge">creerConge</a></li><li><a href="global.html#creerDate">creerDate</a></li><li><a href="global.html#creerHeuresSuppPourUtilisateur">creerHeuresSuppPourUtilisateur</a></li><li><a href="global.html#creerPointage">creerPointage</a></li><li><a href="global.html#deleteUser">deleteUser</a></li><li><a href="global.html#exportPointagesCSV">exportPointagesCSV</a></li><li><a href="global.html#getAllHeuresSupp">getAllHeuresSupp</a></li><li><a href="global.html#getAllUsers">getAllUsers</a></li><li><a href="global.html#getMe">getMe</a></li><li><a href="global.html#getMesHeuresSupp">getMesHeuresSupp</a></li><li><a href="global.html#getUserById">getUserById</a></li><li><a href="global.html#listerDates">listerDates</a></li><li><a href="global.html#listerMesPointages">listerMesPointages</a></li><li><a href="global.html#listerTousLesPointages">listerTousLesPointages</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#majHeuresSupp">majHeuresSupp</a></li><li><a href="global.html#mesConges">mesConges</a></li><li><a href="global.html#mettreAJourDate">mettreAJourDate</a></li><li><a href="global.html#miseAJourStatut">miseAJourStatut</a></li><li><a href="global.html#modifierPointage">modifierPointage</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#sequelize">sequelize</a></li><li><a href="global.html#supprimerConge">supprimerConge</a></li><li><a href="global.html#supprimerDate">supprimerDate</a></li><li><a href="global.html#supprimerHeuresSupp">supprimerHeuresSupp</a></li><li><a href="global.html#tousLesConges">tousLesConges</a></li><li><a href="global.html#updateUser">updateUser</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Jul 31 2025 14:52:37 GMT+0400 (heure de La Réunion)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

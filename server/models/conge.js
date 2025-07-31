@@ -1,6 +1,16 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
 
+/**
+ * @typedef {Object} Conge
+ * @property {number} userId - ID de l'utilisateur
+ * @property {string} type - Type de congé (Congé annuel, RTT, Sans solde, etc.)
+ * @property {string} dateDebut - Date de début du congé (YYYY-MM-DD)
+ * @property {string} dateFin - Date de fin du congé (YYYY-MM-DD)
+ * @property {string} statut - Statut de la demande (en_attente, valide, refuse)
+ * @property {string} [motifRefus] - Motif du refus si applicable
+ */
+
 module.exports = (sequelize) => {
   class Conge extends Model {}
 
@@ -48,6 +58,10 @@ module.exports = (sequelize) => {
   });
 
   Conge.associate = (models) => {
+    /**
+     * Association avec le modèle User
+     * @memberof Conge
+     */
     Conge.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
   };
 

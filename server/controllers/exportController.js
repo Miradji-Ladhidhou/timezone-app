@@ -2,6 +2,14 @@ const { Pointage, User } = require('../models');
 const { Op } = require('sequelize');
 const { Parser } = require('json2csv');
 
+/**
+ * @function exportPointagesCSV
+ * @description Exporte les pointages du jour de l'utilisateur connecté au format CSV
+ * @route GET /api/pointages/export
+ * @access Employé
+ * @returns {CSV} 200 - Fichier CSV des pointages du jour
+ * @returns {Object} 500 - Erreur serveur
+ */
 const exportPointagesCSV = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -18,7 +26,6 @@ const exportPointagesCSV = async (req, res) => {
       order: [['horodatage', 'ASC']],
       include: [{ model: User, as: 'User', attributes: ['nom', 'email'] }]
     });
-
 
     const json = pointages.map(p => ({
       nom: p.User.nom,
@@ -39,4 +46,4 @@ const exportPointagesCSV = async (req, res) => {
   }
 };
 
-module.exports = { exportPointagesCSV }
+module.exports = { exportPointagesCSV };

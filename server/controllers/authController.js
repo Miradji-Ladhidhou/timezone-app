@@ -2,6 +2,15 @@ const { User } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+/**
+ * @function register
+ * @description Inscription d’un nouvel utilisateur
+ * @route POST /api/auth/register
+ * @param {Object} req - Requête Express contenant { nom, email, motDePasse, role }
+ * @param {Object} res - Réponse Express
+ * @returns {Object} 201 - Utilisateur créé
+ * @returns {Object} 400 - Erreur lors de la création
+ */
 const register = async (req, res) => {
   try {
     const { nom, email, motDePasse, role } = req.body;
@@ -20,6 +29,17 @@ const register = async (req, res) => {
   }
 };
 
+/**
+ * @function login
+ * @description Connexion utilisateur avec email et mot de passe
+ * @route POST /api/auth/login
+ * @param {Object} req - Requête Express contenant { email, motDePasse }
+ * @param {Object} res - Réponse Express
+ * @returns {Object} 200 - JWT + infos utilisateur
+ * @returns {Object} 404 - Utilisateur non trouvé
+ * @returns {Object} 401 - Mot de passe invalide
+ * @returns {Object} 500 - Erreur serveur
+ */
 const login = async (req, res) => {
   try {
     const { email, motDePasse } = req.body;
@@ -48,6 +68,16 @@ const login = async (req, res) => {
   }
 };
 
+/**
+ * @function getMe
+ * @description Récupère les informations du user connecté
+ * @route GET /api/auth/me
+ * @param {Object} req - Requête Express avec req.user (JWT décodé)
+ * @param {Object} res - Réponse Express
+ * @returns {Object} 200 - Infos utilisateur
+ * @returns {Object} 404 - Utilisateur non trouvé
+ * @returns {Object} 500 - Erreur serveur
+ */
 const getMe = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
@@ -61,7 +91,5 @@ const getMe = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-
 
 module.exports = { register, login, getMe };

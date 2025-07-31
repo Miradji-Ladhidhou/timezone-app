@@ -3,14 +3,18 @@ const { HeuresSupp, Pointage, User } = require('../models');
 
 const HEURES_NORMALES_MIN = 420; // 7h
 
+/**
+ * @function creerHeuresSuppPourUtilisateur
+ * @description Calcule et enregistre les heures supplémentaires d’un utilisateur pour une date donnée
+ * @param {number} userId - ID de l'utilisateur
+ * @param {string} date - Date au format YYYY-MM-DD
+ * @returns {Promise<void>} - Met à jour ou crée une ligne dans la table `heures_supp`
+ */
 const creerHeuresSuppPourUtilisateur = async (userId, date) => {
   try {
     const pointage = await Pointage.findOne({ where: { userId, date } });
 
-    if (!pointage || !pointage.entree || !pointage.sortie) {
-      // console.log('Données de pointage incomplètes', pointage);
-      return;
-    }
+    if (!pointage || !pointage.entree || !pointage.sortie) return;
 
     const entree = new Date(`${date}T${pointage.entree}`);
     const sortie = new Date(`${date}T${pointage.sortie}`);
@@ -34,7 +38,6 @@ const creerHeuresSuppPourUtilisateur = async (userId, date) => {
         heures_supp: heuresSupp,
         heures_a_recuperer: heuresARecup,
         heures_recuperees: heuresRecuperees,
-        // ⚠️ NE PAS inclure heures_restantes ici
         statut: 'non_recuperee'
       }
     });
@@ -49,21 +52,25 @@ const creerHeuresSuppPourUtilisateur = async (userId, date) => {
         updated_at: new Date()
       });
     }
-
-    // console.log('Heures supp enregistrées pour', date);
   } catch (err) {
-    // console.error('Erreur calcul heures supp :', err);
     throw err;
   }
 };
 
+/**
+ * @function getMesHeuresSupp
+ * @description Récupère les heures supplémentaires de l’utilisateur connecté (avec report auto des heures J-1 si nécessaire)
+ * @route GET /api/heures-supp/mes
+ * @access Employé
+ * @returns {Array<Object>} 200 - Liste des heures supplémentaires
+ * @returns {Object} 500 - Erreur serveur
+ */
 const getMesHeuresSupp = async (req, res) => {
   try {
     const userId = req.user.id;
     const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]; // -1 jour
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-    // 🔍 Vérifier s'il y a des heures non récupérées hier
     const heuresHier = await HeuresSupp.findOne({
       where: {
         userId,
@@ -73,12 +80,10 @@ const getMesHeuresSupp = async (req, res) => {
       }
     });
 
-    // 🔍 Vérifier s'il y a déjà une ligne pour aujourd'hui
     const dejaAujourdHui = await HeuresSupp.findOne({
       where: { userId, date: today }
     });
 
-    // 🛠️ Créer une ligne si nécessaire
     if (heuresHier && !dejaAujourdHui) {
       await HeuresSupp.create({
         userId,
@@ -91,10 +96,8 @@ const getMesHeuresSupp = async (req, res) => {
         heures_restantes: heuresHier.heures_restantes,
         statut: 'non_recuperee'
       });
-      // console.log(` Report automatique de ${heuresHier.heures_restantes} min sur ${today}`);
     }
 
-    // Ensuite on renvoie les données comme avant
     const data = await HeuresSupp.findAll({
       where: { userId },
       order: [['date', 'DESC']]
@@ -102,12 +105,18 @@ const getMesHeuresSupp = async (req, res) => {
 
     res.json(data);
   } catch (err) {
-    // console.error("Erreur getMesHeuresSupp:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-
+/**
+ * @function getAllHeuresSupp
+ * @description Récupère toutes les lignes d’heures supplémentaires avec l’utilisateur associé
+ * @route GET /api/heures-supp
+ * @access Admin
+ * @returns {Array<Object>} 200 - Liste complète des heures supplémentaires
+ * @returns {Object} 500 - Erreur serveur
+ */
 const getAllHeuresSupp = async (req, res) => {
   try {
     const liste = await HeuresSupp.findAll({
@@ -125,24 +134,31 @@ const getAllHeuresSupp = async (req, res) => {
   }
 };
 
-// Dans heuresSuppController.js
+/**
+ * @function majHeuresSupp
+ * @description Met à jour les heures récupérées ou le statut pour une ligne spécifique
+ * @route PUT /api/heures-supp/:id
+ * @access Admin
+ * @param {Object} req.body - Peut contenir heures_recuperees et/ou statut
+ * @returns {Object} 200 - Ligne mise à jour
+ * @returns {Object} 404 - Ligne introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
 const majHeuresSupp = async (req, res) => {
   try {
     const { id } = req.params;
-    const body = req.body; // ✅ Ici la correction
+    const body = req.body;
 
     const instance = await HeuresSupp.findByPk(id);
     if (!instance) {
       return res.status(404).json({ message: "Heures supp introuvables" });
     }
 
-    // On autorise uniquement la mise à jour de certaines colonnes
     if (body.heures_recuperees !== undefined) {
       instance.heures_recuperees = body.heures_recuperees;
       if (body.heures_recuperees >= instance.heures_a_recuperer) {
         instance.statut = 'recuperee';
       }
-
     }
 
     if (body.statut !== undefined) {
@@ -153,12 +169,19 @@ const majHeuresSupp = async (req, res) => {
 
     res.json(instance);
   } catch (err) {
-    // console.error("Erreur majHeuresSupp:", err);
     res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 };
 
-
+/**
+ * @function supprimerHeuresSupp
+ * @description Supprime une ligne d’heures supplémentaires par ID
+ * @route DELETE /api/heures-supp/:id
+ * @access Admin
+ * @returns {Object} 200 - Message de confirmation
+ * @returns {Object} 404 - Introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
 const supprimerHeuresSupp = async (req, res) => {
   try {
     const { id } = req.params;

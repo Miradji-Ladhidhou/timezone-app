@@ -1,6 +1,21 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
 
+/**
+ * @typedef {Object} HeuresSupp
+ * @property {number} userId - ID de l'utilisateur
+ * @property {string} date - Date de la ligne d’heures supplémentaires (YYYY-MM-DD)
+ * @property {number} heures_normales - Durée de travail attendue en minutes (ex : 420 = 7h)
+ * @property {number} heures_travaillees - Temps réellement travaillé en minutes
+ * @property {number} heures_supp - Heures supplémentaires effectuées (au-delà des normales)
+ * @property {number} heures_a_recuperer - Heures à récupérer (si en-dessous des normales)
+ * @property {number} heures_recuperees - Heures déjà récupérées
+ * @property {number} heures_restantes - Heures restantes à récupérer (auto-calculées)
+ * @property {string} statut - Statut de récupération : 'non_recuperee' ou 'recuperee'
+ * @property {Date} created_at - Date de création
+ * @property {Date} updated_at - Dernière mise à jour
+ */
+
 module.exports = (sequelize) => {
   class HeuresSupp extends Model { }
 
@@ -45,7 +60,7 @@ module.exports = (sequelize) => {
         return this.getDataValue('heures_restantes');
       },
       set() {
-        throw new Error('❌ Impossible de modifier heures_restantes car elle est générée par la base.');
+        throw new Error('Impossible de modifier heures_restantes car elle est générée par la base.');
       }
     },
     statut: {
@@ -72,6 +87,10 @@ module.exports = (sequelize) => {
     underscored: true
   });
 
+  /**
+   * Association avec le modèle User
+   * @memberof HeuresSupp
+   */
   HeuresSupp.associate = (models) => {
     HeuresSupp.belongsTo(models.User, {
       foreignKey: 'user_id',

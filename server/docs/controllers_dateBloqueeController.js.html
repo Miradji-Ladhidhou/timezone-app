@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: controllers/dateBloqueeController.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: controllers/dateBloqueeController.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const { DatesBloquees } = require('../models');
+
+/**
+ * @function listerDates
+ * @description Récupère toutes les dates bloquées
+ * @route GET /api/dates-bloquees
+ * @access Admin / Secrétaire / Employé (lecture seule)
+ * @returns {Array&lt;Object>} 200 - Liste des dates bloquées
+ */
+const listerDates = async (req, res) => {
+  const dates = await DatesBloquees.findAll();
+  res.json(dates);
+};
+
+/**
+ * @function creerDate
+ * @description Crée une nouvelle période bloquée (admin ou secrétaire)
+ * @route POST /api/dates-bloquees
+ * @access Admin / Secrétaire
+ * @param {Object} req.body - Contient dateDebut, dateFin, motif
+ * @returns {Object} 201 - Date bloquée créée
+ * @returns {Object} 500 - Erreur serveur
+ */
+const creerDate = async (req, res) => {
+  try {
+    const { dateDebut, dateFin, motif } = req.body;
+    const nouvelle = await DatesBloquees.create({ dateDebut, dateFin, motif });
+    res.status(201).json(nouvelle);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function mettreAJourDate
+ * @description Met à jour une période bloquée existante par son ID
+ * @route PUT /api/dates-bloquees/:id
+ * @access Admin / Secrétaire
+ * @param {Object} req.body - Contient dateDebut, dateFin, motif
+ * @returns {Object} 200 - Date bloquée mise à jour
+ * @returns {Object} 404 - Date introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
+const mettreAJourDate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const date = await DatesBloquees.findByPk(id);
+    if (!date) return res.status(404).json({ message: "Date introuvable." });
+
+    const { dateDebut, dateFin, motif } = req.body;
+    await date.update({ dateDebut, dateFin, motif });
+    res.json(date);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function supprimerDate
+ * @description Supprime une période bloquée existante
+ * @route DELETE /api/dates-bloquees/:id
+ * @access Admin / Secrétaire
+ * @returns {Object} 200 - Message de confirmation
+ * @returns {Object} 404 - Date introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
+const supprimerDate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const date = await DatesBloquees.findByPk(id);
+    if (!date) return res.status(404).json({ message: "Date introuvable." });
+
+    await date.destroy();
+    res.json({ message: "Date bloquée supprimée." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = {
+  listerDates,
+  creerDate,
+  mettreAJourDate,
+  supprimerDate
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#calculerHeuresTravaillees">calculerHeuresTravaillees</a></li><li><a href="global.html#congesValides">congesValides</a></li><li><a href="global.html#creerConge">creerConge</a></li><li><a href="global.html#creerDate">creerDate</a></li><li><a href="global.html#creerHeuresSuppPourUtilisateur">creerHeuresSuppPourUtilisateur</a></li><li><a href="global.html#creerPointage">creerPointage</a></li><li><a href="global.html#deleteUser">deleteUser</a></li><li><a href="global.html#exportPointagesCSV">exportPointagesCSV</a></li><li><a href="global.html#getAllHeuresSupp">getAllHeuresSupp</a></li><li><a href="global.html#getAllUsers">getAllUsers</a></li><li><a href="global.html#getMe">getMe</a></li><li><a href="global.html#getMesHeuresSupp">getMesHeuresSupp</a></li><li><a href="global.html#getUserById">getUserById</a></li><li><a href="global.html#listerDates">listerDates</a></li><li><a href="global.html#listerMesPointages">listerMesPointages</a></li><li><a href="global.html#listerTousLesPointages">listerTousLesPointages</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#majHeuresSupp">majHeuresSupp</a></li><li><a href="global.html#mesConges">mesConges</a></li><li><a href="global.html#mettreAJourDate">mettreAJourDate</a></li><li><a href="global.html#miseAJourStatut">miseAJourStatut</a></li><li><a href="global.html#modifierPointage">modifierPointage</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#sequelize">sequelize</a></li><li><a href="global.html#supprimerConge">supprimerConge</a></li><li><a href="global.html#supprimerDate">supprimerDate</a></li><li><a href="global.html#supprimerHeuresSupp">supprimerHeuresSupp</a></li><li><a href="global.html#tousLesConges">tousLesConges</a></li><li><a href="global.html#updateUser">updateUser</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Jul 31 2025 14:52:37 GMT+0400 (heure de La Réunion)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,6 +1,16 @@
 const { Conge, DatesBloquees, User } = require('../models');
 const { Op } = require('sequelize');
 
+/**
+ * @function creerConge
+ * @description Crée une demande de congé pour l'utilisateur connecté
+ * @route POST /api/conges
+ * @access Employé
+ * @param {Object} req.body - Contient type, dateDebut, dateFin
+ * @returns {Object} 201 - Congé créé (même en cas de chevauchement ou doublon)
+ * @returns {Object} 400 - Erreur de validation
+ * @returns {Object} 500 - Erreur serveur
+ */
 const creerConge = async (req, res) => {
   try {
     const { type, dateDebut, dateFin } = req.body;
@@ -15,8 +25,7 @@ const creerConge = async (req, res) => {
       });
     }
 
-
-    // Vérifier si le congé chevauche une date bloquée
+    // Vérifie chevauchement avec dates bloquées
     const datesBloquees = await DatesBloquees.findAll({
       where: {
         [Op.or]: [
@@ -36,7 +45,7 @@ const creerConge = async (req, res) => {
       console.warn("Chevauchement avec une date bloquée détecté.");
     }
 
-    // Vérifier les doublons de congé
+    // Vérifie doublon de congé
     const doublon = await Conge.findOne({
       where: {
         userId: req.user.id,
@@ -55,6 +64,7 @@ const creerConge = async (req, res) => {
     if (doublon) {
       console.warn("Doublon de demande de congé détecté.");
     }
+
     const conge = await Conge.create({
       userId: req.user.id,
       type,
@@ -73,7 +83,17 @@ const creerConge = async (req, res) => {
   }
 };
 
-
+/**
+ * @function miseAJourStatut
+ * @description Met à jour le statut d’un congé (admin ou secrétaire)
+ * @route PUT /api/conges/:id
+ * @access Admin / Secrétaire
+ * @param {Object} req.body - Contient le nouveau statut et éventuellement un motif de refus
+ * @returns {Object} 200 - Congé mis à jour
+ * @returns {Object} 400 - Motif requis si refus
+ * @returns {Object} 404 - Congé introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
 const miseAJourStatut = async (req, res) => {
   try {
     const { id } = req.params;
@@ -96,6 +116,16 @@ const miseAJourStatut = async (req, res) => {
   }
 };
 
+/**
+ * @function supprimerConge
+ * @description Supprime un congé si son statut est "en_attente"
+ * @route DELETE /api/conges/:id
+ * @access Admin / Secrétaire
+ * @returns {Object} 200 - Message de confirmation
+ * @returns {Object} 400 - Impossible de supprimer un congé validé ou refusé
+ * @returns {Object} 404 - Congé introuvable
+ * @returns {Object} 500 - Erreur serveur
+ */
 const supprimerConge = async (req, res) => {
   try {
     const { id } = req.params;
@@ -114,11 +144,25 @@ const supprimerConge = async (req, res) => {
   }
 };
 
+/**
+ * @function mesConges
+ * @description Récupère tous les congés de l’utilisateur connecté
+ * @route GET /api/conges/mes
+ * @access Employé
+ * @returns {Array<Object>} 200 - Liste de ses congés
+ */
 const mesConges = async (req, res) => {
   const conges = await Conge.findAll({ where: { userId: req.user.id } });
   res.json(conges);
 };
 
+/**
+ * @function congesValides
+ * @description Récupère tous les congés validés (lecture seule pour tous)
+ * @route GET /api/conges/valides
+ * @access Public (authentifié)
+ * @returns {Array<Object>} 200 - Liste des congés validés
+ */
 const congesValides = async (req, res) => {
   const conges = await Conge.findAll({
     where: { statut: 'valide' },
@@ -127,6 +171,13 @@ const congesValides = async (req, res) => {
   res.json(conges);
 };
 
+/**
+ * @function tousLesConges
+ * @description Récupère tous les congés avec utilisateur inclus (admin ou secrétaire)
+ * @route GET /api/conges
+ * @access Admin / Secrétaire
+ * @returns {Array<Object>} 200 - Liste complète des congés
+ */
 const tousLesConges = async (req, res) => {
   const conges = await Conge.findAll({ include: { model: User, as: 'user' } });
   res.json(conges);

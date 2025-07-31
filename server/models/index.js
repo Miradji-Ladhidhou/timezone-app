@@ -6,6 +6,11 @@ const Sequelize = require('sequelize');
 require('dotenv').config();
 
 const db = {};
+
+/**
+ * Initialise l’instance Sequelize avec les variables d’environnement
+ * @type {Sequelize}
+ */
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
@@ -17,22 +22,25 @@ const sequelize = new Sequelize(
   }
 );
 
-// Importation dynamique des modèles
+// Importation dynamique de tous les modèles dans le dossier courant
 fs.readdirSync(__dirname)
   .filter(file => file !== 'index.js' && file.endsWith('.js'))
   .forEach(file => {
+    /**
+     * Chaque modèle exporte une fonction qui retourne un objet Sequelize Model
+     */
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
   });
 
-// Association des modèles
+// Appel des méthodes d’association entre modèles (définies dans chaque modèle)
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
 
-// Relations manuelles
+// Associations supplémentaires manuelles
 if (db.HeuresSupp && db.User) {
   db.HeuresSupp.belongsTo(db.User, { foreignKey: 'user_id', as: 'utilisateur_heures' });
 }
@@ -41,7 +49,7 @@ if (db.Pointage && db.User) {
   db.Pointage.belongsTo(db.User, { foreignKey: 'user_id', as: 'utilisateur_pointage' });
 }
 
-
+// Exporte l'instance sequelize + tous les modèles chargés
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
