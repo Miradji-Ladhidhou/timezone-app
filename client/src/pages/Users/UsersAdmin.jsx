@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Container, Table, Button, Modal, Form, Row, Col, Card, Alert, Pagination
+  Container, Table, Button, Modal, Form, Row, Col, Card, Pagination
 } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,7 +19,10 @@ const UsersAdmin = () => {
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-  const [alert, setAlert] = useState('');
+
+  const [showModalAlerte, setShowModalAlerte] = useState(false);
+  const [alerteMessage, setAlerteMessage] = useState('');
+  const [userASupprimer, setUserASupprimer] = useState(null);
 
   useEffect(() => {
     const resize = () => setIsMobile(window.innerWidth < 768);
@@ -65,16 +68,6 @@ const UsersAdmin = () => {
   const usersPage = usersTries.slice(indexDebut, indexDebut + parPage);
   const totalPages = Math.ceil(usersTries.length / parPage);
 
-  const pagination = (
-    <Pagination className="mt-3 justify-content-center">
-      {[...Array(totalPages).keys()].map(num => (
-        <Pagination.Item key={num + 1} active={num + 1 === page} onClick={() => setPage(num + 1)}>
-          {num + 1}
-        </Pagination.Item>
-      ))}
-    </Pagination>
-  );
-
   const handleEditClick = (user) => {
     setSelectedUser(user);
     setNom(user.nom);
@@ -93,19 +86,29 @@ const UsersAdmin = () => {
       fetchUsers();
     } catch (err) {
       console.error("Erreur modification:", err);
-      setAlert("Erreur lors de la mise à jour de l'utilisateur.");
+      setAlerteMessage("Erreur lors de la mise à jour de l'utilisateur.");
+      setShowModalAlerte(true);
     }
   };
 
-  const deleteUser = async (id) => {
-    if (!window.confirm("Confirmer la suppression de cet utilisateur ?")) return;
+  const confirmerSuppression = (user) => {
+    setUserASupprimer(user);
+    setAlerteMessage(`Confirmer la suppression de ${user.nom} ?`);
+    setShowModalAlerte(true);
+  };
+
+  const deleteUser = async () => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/users/${id}`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/users/${userASupprimer.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      setShowModalAlerte(false);
+      setUserASupprimer(null);
       fetchUsers();
     } catch (err) {
       console.error("Erreur suppression:", err);
+      setAlerteMessage("Erreur lors de la suppression.");
+      setShowModalAlerte(true);
     }
   };
 
@@ -142,13 +145,19 @@ const UsersAdmin = () => {
                   <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                   <td>
                     <Button size="sm" variant="warning" onClick={() => handleEditClick(u)}>Modifier</Button>{' '}
-                    <Button size="sm" variant="danger" onClick={() => deleteUser(u.id)}>Supprimer</Button>
+                    <Button size="sm" variant="danger" onClick={() => confirmerSuppression(u)}>Supprimer</Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </Table>
-          {pagination}
+          <Pagination className="mt-3 justify-content-center">
+            {[...Array(totalPages).keys()].map(num => (
+              <Pagination.Item key={num + 1} active={num + 1 === page} onClick={() => setPage(num + 1)}>
+                {num + 1}
+              </Pagination.Item>
+            ))}
+          </Pagination>
         </>
       ) : (
         <>
@@ -162,13 +171,19 @@ const UsersAdmin = () => {
                     <Card.Text><strong>Rôle:</strong> {u.role}</Card.Text>
                     <Card.Text><strong>Créé le:</strong> {new Date(u.createdAt).toLocaleDateString()}</Card.Text>
                     <Button size="sm" variant="warning" onClick={() => handleEditClick(u)}>Modifier</Button>{' '}
-                    <Button size="sm" variant="danger" onClick={() => deleteUser(u.id)}>Supprimer</Button>
+                    <Button size="sm" variant="danger" onClick={() => confirmerSuppression(u)}>Supprimer</Button>
                   </Card.Body>
                 </Card>
               </Col>
             ))}
           </Row>
-          {pagination}
+          <Pagination className="mt-3 justify-content-center">
+            {[...Array(totalPages).keys()].map(num => (
+              <Pagination.Item key={num + 1} active={num + 1 === page} onClick={() => setPage(num + 1)}>
+                {num + 1}
+              </Pagination.Item>
+            ))}
+          </Pagination>
         </>
       )}
 
@@ -176,7 +191,6 @@ const UsersAdmin = () => {
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton><Modal.Title>Modifier utilisateur</Modal.Title></Modal.Header>
         <Modal.Body>
-          {alert && <Alert variant="danger">{alert}</Alert>}
           <Form>
             <Form.Group className="mb-2">
               <Form.Label>Nom</Form.Label>
@@ -199,6 +213,22 @@ const UsersAdmin = () => {
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
           <Button variant="primary" onClick={handleUpdateUser}>Enregistrer</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal alerte (erreur ou confirmation) */}
+      <Modal show={showModalAlerte} onHide={() => setShowModalAlerte(false)}>
+        <Modal.Header closeButton><Modal.Title>Information</Modal.Title></Modal.Header>
+        <Modal.Body>{alerteMessage}</Modal.Body>
+        <Modal.Footer>
+          {userASupprimer ? (
+            <>
+              <Button variant="secondary" onClick={() => setShowModalAlerte(false)}>Annuler</Button>
+              <Button variant="danger" onClick={deleteUser}>Confirmer</Button>
+            </>
+          ) : (
+            <Button variant="primary" onClick={() => setShowModalAlerte(false)}>OK</Button>
+          )}
         </Modal.Footer>
       </Modal>
     </Container>

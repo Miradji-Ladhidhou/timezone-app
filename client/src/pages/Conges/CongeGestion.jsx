@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Container, Table, Button, Modal, Form, Badge, Row, Col, Alert, Card, Pagination
+  Container, Table, Button, Modal, Form, Badge, Row, Col, Card, Pagination
 } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,12 +17,17 @@ const CongeGestion = () => {
   const [newDebut, setNewDebut] = useState('');
   const [newFin, setNewFin] = useState('');
   const [motifDate, setMotifDate] = useState('');
-  const [alert, setAlert] = useState('');
 
   const [tri, setTri] = useState({ colonne: 'createdAt', ordre: 'desc' });
   const [page, setPage] = useState(1);
   const parPage = 10;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const [showModalAlerte, setShowModalAlerte] = useState(false);
+  const [alerteMessage, setAlerteMessage] = useState('');
+  const [showModalMotif, setShowModalMotif] = useState(false);
+  const [motifRefus, setMotifRefus] = useState('');
+  const [congeARefuser, setCongeARefuser] = useState(null);
 
   useEffect(() => {
     if (user?.role === 'employe') navigate('/conges');
@@ -108,42 +113,54 @@ const CongeGestion = () => {
   };
 
   const exportCSV = () => {
-  if (!conges || conges.length === 0) return;
+    if (!conges || conges.length === 0) return;
 
-  const lignes = conges.map(c => ({
-    Employe: c.user?.nom || '',
-    Type: c.type,
-    DateDebut: new Date(c.dateDebut).toLocaleDateString(),
-    DateFin: new Date(c.dateFin).toLocaleDateString(),
-    Statut: c.statut,
-    DemandeLe: new Date(c.createdAt).toLocaleDateString(),
-    Chevauchement: c.statut === 'en_attente' ? detecterChevauchement(c) : 'RAS',
-  }));
+    const lignes = conges.map(c => ({
+      Employe: c.user?.nom || '',
+      Type: c.type,
+      DateDebut: new Date(c.dateDebut).toLocaleDateString(),
+      DateFin: new Date(c.dateFin).toLocaleDateString(),
+      Statut: c.statut,
+      DemandeLe: new Date(c.createdAt).toLocaleDateString(),
+      Chevauchement: c.statut === 'en_attente' ? detecterChevauchement(c) : 'RAS',
+    }));
 
-  const header = Object.keys(lignes[0]).join(';');
-  const rows = lignes.map(obj => Object.values(obj).join(';'));
-  const csvContent = [header, ...rows].join('\n');
+    const header = Object.keys(lignes[0]).join(';');
+    const rows = lignes.map(obj => Object.values(obj).join(';'));
+    const csvContent = [header, ...rows].join('\n');
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", "export_conges.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "export_conges.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-
-  const handleValidation = async (id, statut, motifRefus = null) => {
+  const handleValidation = async (id, statut, motif = null) => {
     try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/conges/${id}`, { statut, motifRefus }, {
+      await axios.put(`${process.env.REACT_APP_API_URL}/conges/${id}`, { statut, motifRefus: motif }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchConges();
     } catch (err) {
       console.error("Erreur validation congé:", err);
+      setAlerteMessage("Erreur lors de la validation/refus du congé.");
+      setShowModalAlerte(true);
     }
+  };
+
+  const handleConfirmerRefus = async () => {
+    if (!motifRefus.trim()) {
+      setAlerteMessage("Le motif est obligatoire.");
+      setShowModalAlerte(true);
+      return;
+    }
+    await handleValidation(congeARefuser, 'refuse', motifRefus);
+    setShowModalMotif(false);
+    setMotifRefus('');
   };
 
   const deleteConge = async (id) => {
@@ -159,7 +176,11 @@ const CongeGestion = () => {
   };
 
   const handleAjoutDateBloquee = async () => {
-    if (!newDebut || !newFin) return setAlert("Veuillez compléter les deux dates.");
+    if (!newDebut || !newFin) {
+      setAlerteMessage("Veuillez compléter les deux dates.");
+      setShowModalAlerte(true);
+      return;
+    }
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/dates-bloquees`, {
         dateDebut: newDebut, dateFin: newFin, motif: motifDate
@@ -173,7 +194,8 @@ const CongeGestion = () => {
       fetchDatesBloquees();
     } catch (err) {
       console.error("Erreur ajout date bloquée:", err);
-      setAlert("Erreur lors de l'ajout.");
+      setAlerteMessage("Erreur lors de l'ajout.");
+      setShowModalAlerte(true);
     }
   };
 
@@ -210,8 +232,7 @@ const CongeGestion = () => {
         <Button variant="outline-success" size="sm" onClick={exportCSV}>Exporter CSV</Button>
       </div>
 
-
-      {/* Table desktop */}
+      {/* Table / Cards */}
       {!isMobile ? (
         <>
           <Table bordered hover responsive className="mt-3">
@@ -254,8 +275,8 @@ const CongeGestion = () => {
                       <>
                         <Button size="sm" variant="success" onClick={() => handleValidation(c.id, 'valide')}>Valider</Button>{' '}
                         <Button size="sm" variant="danger" onClick={() => {
-                          const motif = prompt('Motif du refus :');
-                          if (motif) handleValidation(c.id, 'refuse', motif);
+                          setShowModalMotif(true);
+                          setCongeARefuser(c.id);
                         }}>Refuser</Button>{' '}
                       </>
                     )}
@@ -287,8 +308,8 @@ const CongeGestion = () => {
                     <>
                       <Button size="sm" variant="success" onClick={() => handleValidation(c.id, 'valide')}>Valider</Button>{' '}
                       <Button size="sm" variant="danger" onClick={() => {
-                        const motif = prompt('Motif du refus :');
-                        if (motif) handleValidation(c.id, 'refuse', motif);
+                        setShowModalMotif(true);
+                        setCongeARefuser(c.id);
                       }}>Refuser</Button>{' '}
                     </>
                   )}
@@ -328,11 +349,42 @@ const CongeGestion = () => {
         ))}
       </Row>
 
+      {/* Modal Alerte */}
+      <Modal show={showModalAlerte} onHide={() => setShowModalAlerte(false)}>
+        <Modal.Header closeButton><Modal.Title>⚠️ Alerte</Modal.Title></Modal.Header>
+        <Modal.Body>{alerteMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModalAlerte(false)}>Fermer</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal motif de refus */}
+      <Modal show={showModalMotif} onHide={() => setShowModalMotif(false)}>
+        <Modal.Header closeButton><Modal.Title>Refuser un congé</Modal.Title></Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group>
+              <Form.Label>Motif du refus</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={motifRefus}
+                onChange={e => setMotifRefus(e.target.value)}
+                placeholder="Ex: congé non justifié, service surchargé, etc."
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModalMotif(false)}>Annuler</Button>
+          <Button variant="danger" onClick={handleConfirmerRefus}>Confirmer le refus</Button>
+        </Modal.Footer>
+      </Modal>
+
       {/* Modal ajout date bloquée */}
       <Modal show={showModalDate} onHide={() => setShowModalDate(false)}>
         <Modal.Header closeButton><Modal.Title>Ajouter une date bloquée</Modal.Title></Modal.Header>
         <Modal.Body>
-          {alert && <Alert variant="danger">{alert}</Alert>}
           <Form>
             <Form.Group className="mb-2">
               <Form.Label>Date de début</Form.Label>
@@ -344,7 +396,7 @@ const CongeGestion = () => {
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Motif (facultatif)</Form.Label>
-              <Form.Control as="textarea" rows={2} value={motifDate} onChange={e => setMotifDate(e.target.value)} placeholder="Ex: Fermeture annuelle" />
+              <Form.Control as="textarea" rows={2} value={motifDate} onChange={e => setMotifDate(e.target.value)} />
             </Form.Group>
           </Form>
         </Modal.Body>

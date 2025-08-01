@@ -13,9 +13,12 @@ const HeuresAdmin = () => {
   const [triAsc] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [modifHeures, setModifHeures] = useState({});
-  const [showModal, setShowModal] = useState(false);
-  const [infoMessage, setInfoMessage] = useState('');
   const [validations, setValidations] = useState({});
+
+  const [showModalAlerte, setShowModalAlerte] = useState(false);
+  const [alerteMessage, setAlerteMessage] = useState('');
+  const [showModalConfirmation, setShowModalConfirmation] = useState(false);
+  const [idASupprimer, setIdASupprimer] = useState(null);
 
   useEffect(() => {
     const resize = () => setIsMobile(window.innerWidth < 768);
@@ -48,26 +51,36 @@ const HeuresAdmin = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setValidations({ ...validations, [id]: true });
-      setInfoMessage("Heures récupérées validées. Le reste sera reporté demain.");
-      setShowModal(true);
+      setAlerteMessage("Heures récupérées validées. Le reste sera reporté demain.");
+      setShowModalAlerte(true);
       fetchHeures();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const trier = () => [...heures].sort((a, b) => triAsc ? new Date(a.date) - new Date(b.date) : new Date(b.date) - new Date(a.date));
+  const trier = () => [...heures].sort((a, b) =>
+    triAsc ? new Date(a.date) - new Date(b.date) : new Date(b.date) - new Date(a.date)
+  );
+
   const paginer = (data) => data.slice((page - 1) * parPage, page * parPage);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Confirmer la suppression ?")) return;
+  const demanderSuppression = (id) => {
+    setShowModalConfirmation(true);
+    setIdASupprimer(id);
+  };
+
+  const confirmerSuppression = async () => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/heures-supp/${id}`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/heures-supp/${idASupprimer}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      setShowModalConfirmation(false);
       fetchHeures();
     } catch (err) {
       console.error(err);
+      setAlerteMessage("Erreur lors de la suppression.");
+      setShowModalAlerte(true);
     }
   };
 
@@ -78,7 +91,6 @@ const HeuresAdmin = () => {
         const hier = new Date(h.date);
         hier.setDate(hier.getDate() - 1);
         const hierStr = hier.toISOString().split('T')[0];
-
         const hHier = heures.find(e => new Date(e.date).toISOString().split('T')[0] === hierStr);
         const suppJour = Math.floor((h.heures_supp || 0) / 60);
         const suppHier = hHier ? Math.floor((hHier.heures_restantes || 0) / 60) : 0;
@@ -112,6 +124,7 @@ const HeuresAdmin = () => {
   const heuresPage = paginer(trier());
   const totalPages = Math.ceil(heures.length / parPage);
   const estAujourdhui = (dateStr) => new Date(dateStr).toDateString() === new Date().toDateString();
+
   const badgeStatut = (restantes) => {
     if (restantes === 0) return <Badge bg="success">Récupérées</Badge>;
     if (restantes > 0) return <Badge bg="warning">Restantes</Badge>;
@@ -203,7 +216,9 @@ const HeuresAdmin = () => {
                   <td>{h.statut}</td>
                   {user?.role === 'admin' && (
                     <td>
-                      <Button size="sm" variant="danger" onClick={() => handleDelete(h.id)}>Supprimer</Button>
+                      <Button size="sm" variant="danger" onClick={() => demanderSuppression(h.id)}>
+                        Supprimer
+                      </Button>
                     </td>
                   )}
                 </tr>
@@ -255,7 +270,7 @@ const HeuresAdmin = () => {
                       </>
                     ) : badgeStatut(restantes * 60)}
                     {user?.role === 'admin' && (
-                      <Button className="mt-2" size="sm" variant="danger" onClick={() => handleDelete(h.id)}>
+                      <Button className="mt-2" size="sm" variant="danger" onClick={() => demanderSuppression(h.id)}>
                         Supprimer
                       </Button>
                     )}
@@ -278,11 +293,22 @@ const HeuresAdmin = () => {
         </Row>
       )}
 
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      {/* Modal Confirmation Suppression */}
+      <Modal show={showModalConfirmation} onHide={() => setShowModalConfirmation(false)}>
         <Modal.Header closeButton><Modal.Title>Confirmation</Modal.Title></Modal.Header>
-        <Modal.Body>{infoMessage}</Modal.Body>
+        <Modal.Body>Souhaitez-vous vraiment supprimer cet enregistrement ?</Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => setShowModal(false)}>OK</Button>
+          <Button variant="secondary" onClick={() => setShowModalConfirmation(false)}>Annuler</Button>
+          <Button variant="danger" onClick={confirmerSuppression}>Confirmer</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal Alerte */}
+      <Modal show={showModalAlerte} onHide={() => setShowModalAlerte(false)}>
+        <Modal.Header closeButton><Modal.Title>⚠️ Alerte</Modal.Title></Modal.Header>
+        <Modal.Body>{alerteMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={() => setShowModalAlerte(false)}>OK</Button>
         </Modal.Footer>
       </Modal>
     </Container>

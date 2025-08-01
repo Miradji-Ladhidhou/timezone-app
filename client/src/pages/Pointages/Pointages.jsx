@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Container, Row, Col, Card, Button, Table, Form, Alert
+  Container, Row, Col, Card, Button, Table, Form, Modal
 } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,9 +12,17 @@ const Pointages = () => {
   const [pointages, setPointages] = useState([]);
   const [type, setType] = useState('entree');
   const [heureManuelle, setHeureManuelle] = useState('');
-  const [message, setMessage] = useState('');
-  const [erreur, setErreur] = useState('');
   const [triAsc, setTriAsc] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const [showModalAlerte, setShowModalAlerte] = useState(false);
+  const [alerteMessage, setAlerteMessage] = useState('');
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchPointages = useCallback(async () => {
     try {
@@ -24,6 +32,8 @@ const Pointages = () => {
       setPointages(res.data);
     } catch (err) {
       console.error("Erreur récupération pointages", err);
+      setAlerteMessage("Erreur lors de la récupération des pointages");
+      setShowModalAlerte(true);
     }
   }, [token]);
 
@@ -33,7 +43,6 @@ const Pointages = () => {
 
   const ajouterPointage = async () => {
     try {
-      setErreur('');
       const maintenant = new Date();
       const date = maintenant.toISOString().split('T')[0];
       const heure = heureManuelle || maintenant.toTimeString().split(':').slice(0, 2).join(':');
@@ -44,11 +53,13 @@ const Pointages = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setMessage('Pointage ajouté');
+      setAlerteMessage('Pointage ajouté avec succès');
+      setShowModalAlerte(true);
       setHeureManuelle('');
       await fetchPointages();
     } catch (err) {
-      setErreur(err.response?.data?.message || 'Erreur lors du pointage');
+      setAlerteMessage(err.response?.data?.message || 'Erreur lors du pointage');
+      setShowModalAlerte(true);
     }
   };
 
@@ -75,12 +86,8 @@ const Pointages = () => {
         </Button>
       </div>
 
-      {/* Formulaire d’ajout */}
       <Card className="p-3 shadow-sm mt-4">
         <h5>Ajouter un pointage</h5>
-        {message && <Alert variant="success" onClose={() => setMessage('')} dismissible>{message}</Alert>}
-        {erreur && <Alert variant="danger" onClose={() => setErreur('')} dismissible>{erreur}</Alert>}
-
         <Row className="align-items-end">
           <Col md={4}>
             <Form.Group>
@@ -111,7 +118,6 @@ const Pointages = () => {
         </Row>
       </Card>
 
-      {/* Historique */}
       <h5 className="mt-5 d-flex justify-content-between align-items-center">
         Historique
         <Button size="sm" variant="outline-secondary" onClick={() => setTriAsc(!triAsc)}>
@@ -119,32 +125,62 @@ const Pointages = () => {
         </Button>
       </h5>
 
-      <Table striped bordered hover responsive className="mt-2">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Entrée</th>
-            <th>Pause</th>
-            <th>Reprise</th>
-            <th>Sortie</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pointages.length === 0 ? (
-            <tr><td colSpan={5} className="text-center">Aucun pointage</td></tr>
-          ) : (
-            grouperParJour().map(p => (
-              <tr key={p.date}>
-                <td>{formaterDate(p.date)}</td>
-                <td>{formaterHeure(p.entree)}</td>
-                <td>{formaterHeure(p.pause)}</td>
-                <td>{formaterHeure(p.reprise)}</td>
-                <td>{formaterHeure(p.sortie)}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+      {!isMobile ? (
+        <Table striped bordered hover responsive className="mt-2">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Entrée</th>
+              <th>Pause</th>
+              <th>Reprise</th>
+              <th>Sortie</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pointages.length === 0 ? (
+              <tr><td colSpan={5} className="text-center">Aucun pointage</td></tr>
+            ) : (
+              grouperParJour().map(p => (
+                <tr key={p.date}>
+                  <td>{formaterDate(p.date)}</td>
+                  <td>{formaterHeure(p.entree)}</td>
+                  <td>{formaterHeure(p.pause)}</td>
+                  <td>{formaterHeure(p.reprise)}</td>
+                  <td>{formaterHeure(p.sortie)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </Table>
+      ) : (
+        <Row className="mt-2">
+          {grouperParJour().map(p => (
+            <Col xs={12} key={p.date} className="mb-3">
+              <Card>
+                <Card.Body>
+                  <Card.Title>{formaterDate(p.date)}</Card.Title>
+                  <Card.Text>
+                    <strong>Entrée :</strong> {formaterHeure(p.entree)}<br />
+                    <strong>Pause :</strong> {formaterHeure(p.pause)}<br />
+                    <strong>Reprise :</strong> {formaterHeure(p.reprise)}<br />
+                    <strong>Sortie :</strong> {formaterHeure(p.sortie)}
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
+
+      <Modal show={showModalAlerte} onHide={() => setShowModalAlerte(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Information</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{alerteMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={() => setShowModalAlerte(false)}>OK</Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };
