@@ -27,6 +27,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="*" element={<NotFound />} />
 
         {/* Auth publiques */}
         <Route path="/login" element={<Login />} />
@@ -115,7 +116,6 @@ const App = () => {
           />
         </Route>
       </Routes>
-      <Route path="*" element={<NotFound />} />
     </BrowserRouter>
   );
 };
