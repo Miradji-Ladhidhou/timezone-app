@@ -13,7 +13,7 @@ const AboutPage = () => {
         <Col xs={12} md={6}>
           <Card className="h-100 border-0 shadow-sm">
             <Card.Body>
-              <Card.Title className="fw-bold">🎯 Notre mission</Card.Title>
+              <Card.Title className="fw-bold">Notre mission</Card.Title>
               <Card.Text className="text-muted">
                 Offrir une solution fluide et intuitive aux entreprises et aux employés pour gérer les congés, les pointages et anticiper les dates bloquées.
               </Card.Text>

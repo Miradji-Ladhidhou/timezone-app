@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom'; 
 
 const HomePage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -67,12 +68,12 @@ const HomePage = () => {
           {!user ? (
             <>
               <p className="text-muted">Accédez à votre espace personnel pour commencer</p>
-              <Button href="/login" variant="primary" size="lg">
+              <Button as={Link} to="/login" variant="primary" size="lg">
                 Se connecter
               </Button>
             </>
           ) : (
-            <Button href="/dashboard" variant="success" size="lg">
+            <Button as={Link} to="/dashboard" variant="success" size="lg">
               Accéder au Dashboard
             </Button>
           )}

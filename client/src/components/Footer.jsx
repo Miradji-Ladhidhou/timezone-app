@@ -1,5 +1,6 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -15,17 +16,29 @@ const Footer = () => {
           <Col md={3}>
             <h6>Navigation</h6>
             <ul className="list-unstyled small">
-              <li><a href="/" className="text-white text-decoration-none">Accueil</a></li>
-              <li><a href="/about" className="text-white text-decoration-none">À propos</a></li>
-              <li><a href="/contact" className="text-white text-decoration-none">Contact</a></li>
+              <li>
+                <Link to="/" className="text-white text-decoration-none">Accueil</Link>
+              </li>
+              <li>
+                <Link to="/about" className="text-white text-decoration-none">À propos</Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-white text-decoration-none">Contact</Link>
+              </li>
             </ul>
           </Col>
           <Col md={3}>
             <h6>Informations</h6>
             <ul className="list-unstyled small">
-              <li><a href="/cgu" className="text-white text-decoration-none">CGU</a></li>
-              <li><a href="/confidentialite" className="text-white text-decoration-none">Confidentialité</a></li>
-              <li><a href="/mentions-legales" className="text-white text-decoration-none">Mentions légales</a></li>
+              <li>
+                <Link to="/cgu" className="text-white text-decoration-none">CGU</Link>
+              </li>
+              <li>
+                <Link to="/confidentialite" className="text-white text-decoration-none">Confidentialité</Link>
+              </li>
+              <li>
+                <Link to="/mentions-legales" className="text-white text-decoration-none">Mentions légales</Link>
+              </li>
             </ul>
           </Col>
         </Row>
