@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Container, Table, Button, Modal, Form, Badge, Row, Col, Alert, Card, Pagination
+  Container, Table, Button, Modal, Form, Badge, Row, Col, Card, Pagination
 } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,12 +8,6 @@ import { useAuth } from '../../contexts/AuthContext';
 const CongeEmploye = () => {
   const { token, user } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const [mesConges, setMesConges] = useState([]);
   const [congesValides, setCongesValides] = useState([]);
@@ -23,14 +17,22 @@ const CongeEmploye = () => {
   const [debut, setDebut] = useState('');
   const [fin, setFin] = useState('');
   const [motif, setMotif] = useState('');
-  const [alert, setAlert] = useState('');
   const [triMes, setTriMes] = useState({ colonne: 'createdAt', ordre: 'desc' });
   const [triValides, setTriValides] = useState({ colonne: 'createdAt', ordre: 'desc' });
   const [pageMes, setPageMes] = useState(1);
   const [pageValides, setPageValides] = useState(1);
-  const parPage = 10;
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(null);
+  const [showModalAlerte, setShowModalAlerte] = useState(false);
+  const [alerteMessage, setAlerteMessage] = useState('');
+
+  const parPage = 10;
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchMesConges = useCallback(async () => {
     const res = await axios.get(`${process.env.REACT_APP_API_URL}/conges/mes`, {
@@ -106,12 +108,17 @@ const CongeEmploye = () => {
   const validesPage = congesValidesTries.slice((pageValides - 1) * parPage, pageValides * parPage);
 
   const handleDemande = async () => {
-    setAlert('');
     const now = new Date().toISOString().split('T')[0];
-
-    // Dates invalides → bloquant
-    if (debut < now) return setAlert("La date de début ne peut pas être dans le passé.");
-    if (debut > fin) return setAlert("La date de début ne peut pas être après la date de fin.");
+    if (debut < now) {
+      setAlerteMessage("La date de début ne peut pas être dans le passé.");
+      setShowModalAlerte(true);
+      return;
+    }
+    if (debut > fin) {
+      setAlerteMessage("La date de début ne peut pas être après la date de fin.");
+      setShowModalAlerte(true);
+      return;
+    }
 
     const messages = {
       bloquees: '',
@@ -119,46 +126,48 @@ const CongeEmploye = () => {
     };
 
     if (datesBloquees.some(date => debut <= date.dateFin && fin >= date.dateDebut)) {
-      messages.bloquees = "La période chevauche une ou plusieurs **dates bloquées**.";
+      messages.bloquees = "La période chevauche une ou plusieurs dates bloquées.";
     }
 
     if (mesConges.some(c => debut <= c.dateFin && fin >= c.dateDebut)) {
-      messages.doublons = "Vous avez déjà une **demande sur cette période**.";
+      messages.doublons = "Vous avez déjà une demande sur cette période.";
     }
 
-    // Toujours confirmer si un avertissement est présent
-    const hasWarnings = Object.values(messages).some(msg => msg);
-    if (hasWarnings) {
+    if (messages.bloquees || messages.doublons) {
       setPendingRequest({ type, dateDebut: debut, dateFin: fin, motif, messages });
       setShowConfirmation(true);
       return;
     }
 
-    envoyerDemande({ type, dateDebut: debut, dateFin: fin, motif }, []);
+    envoyerDemande({ type, dateDebut: debut, dateFin: fin, motif });
   };
 
-const envoyerDemande = async (data, messages = {}) => {
-  try {
-    await axios.post(`${process.env.REACT_APP_API_URL}/conges`, data, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  const envoyerDemande = async (data, messages = {}) => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/conges`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    // Reset
-    setType(''); setDebut(''); setFin(''); setMotif('');
-    setShowModal(false); setShowConfirmation(false); setPendingRequest(null);
-    fetchMesConges(); fetchCongesValides();
+      setType('');
+      setDebut('');
+      setFin('');
+      setMotif('');
+      setShowModal(false);
+      setShowConfirmation(false);
+      setPendingRequest(null);
+      fetchMesConges();
+      fetchCongesValides();
 
-    const messageFinal = "Demande envoyée." +
-      (messages.bloquees ? ` ${messages.bloquees}` : '') +
-      (messages.doublons ? ` ${messages.doublons}` : '');
-
-    setAlert(messageFinal);
-    setTimeout(() => setAlert(''), 8000);
-  } catch (err) {
-    setAlert("Une erreur est survenue.");
-  }
-};
-
+      const finalMessage = "Demande envoyée." +
+        (messages.bloquees ? ` ${messages.bloquees}` : '') +
+        (messages.doublons ? ` ${messages.doublons}` : '');
+      setAlerteMessage(finalMessage);
+      setShowModalAlerte(true);
+    } catch (err) {
+      setAlerteMessage("Une erreur est survenue.");
+      setShowModalAlerte(true);
+    }
+  };
 
   const pagination = (total, page, setPage) => (
     <Pagination className="mt-3 justify-content-center">
@@ -172,29 +181,6 @@ const envoyerDemande = async (data, messages = {}) => {
 
   return (
     <Container className="mt-4">
-      {/* Confirmation */}
-     <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
-  <Modal.Header closeButton>
-    <Modal.Title>Confirmation requise</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    {pendingRequest?.messages?.bloquees && (
-      <Alert variant="warning">{pendingRequest.messages.bloquees}</Alert>
-    )}
-    {pendingRequest?.messages?.doublons && (
-      <Alert variant="danger">{pendingRequest.messages.doublons}</Alert>
-    )}
-    <p>Souhaitez-vous continuer malgré ces avertissements ?</p>
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={() => setShowConfirmation(false)}>Annuler</Button>
-    <Button variant="warning" onClick={() => envoyerDemande(pendingRequest, pendingRequest.messages)}>
-      Oui, continuer
-    </Button>
-  </Modal.Footer>
-</Modal>
-
-
       <Row className="mb-3">
         <Col><h3>Mes congés - {user?.nom}</h3></Col>
         <Col className="text-end">
@@ -202,19 +188,35 @@ const envoyerDemande = async (data, messages = {}) => {
         </Col>
       </Row>
 
-      {/* Mes demandes */}
       <h5>Mes demandes</h5>
-      {!isMobile ? (
+      {isMobile ? (
+        <Row>
+          {mesPage.map(c => (
+            <Col xs={12} key={c.id} className="mb-3">
+              <Card>
+                <Card.Body>
+                  <Card.Title>{c.type}</Card.Title>
+                  <Card.Text>
+                    Du {new Date(c.dateDebut).toLocaleDateString()} au {new Date(c.dateFin).toLocaleDateString()}<br />
+                    {badgeStatut(c.statut)}<br />
+                    Demandé le {new Date(c.createdAt).toLocaleDateString()}
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      ) : (
         <>
           <Table bordered hover responsive className="mt-2">
             <thead>
               <tr>
-                <th onClick={() => handleTriMes('type')} style={{ cursor: 'pointer' }}>Type {triMes.colonne === 'type' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
-                <th onClick={() => handleTriMes('dateDebut')} style={{ cursor: 'pointer' }}>Début {triMes.colonne === 'dateDebut' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
-                <th onClick={() => handleTriMes('dateFin')} style={{ cursor: 'pointer' }}>Fin {triMes.colonne === 'dateFin' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
-                <th onClick={() => handleTriMes('statut')} style={{ cursor: 'pointer' }}>Statut {triMes.colonne === 'statut' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
-                <th onClick={() => handleTriMes('createdAt')} style={{ cursor: 'pointer' }}>Demandé le {triMes.colonne === 'createdAt' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
-                <th onClick={() => handleTriMes('updatedAt')} style={{ cursor: 'pointer' }}>Mis à jour {triMes.colonne === 'updatedAt' && (triMes.ordre === 'asc' ? '▲' : '▼')}</th>
+                <th onClick={() => handleTriMes('type')}>Type</th>
+                <th onClick={() => handleTriMes('dateDebut')}>Début</th>
+                <th onClick={() => handleTriMes('dateFin')}>Fin</th>
+                <th onClick={() => handleTriMes('statut')}>Statut</th>
+                <th onClick={() => handleTriMes('createdAt')}>Demandé le</th>
+                <th onClick={() => handleTriMes('updatedAt')}>Mis à jour</th>
               </tr>
             </thead>
             <tbody>
@@ -232,26 +234,8 @@ const envoyerDemande = async (data, messages = {}) => {
           </Table>
           {pagination(mesConges.length, pageMes, setPageMes)}
         </>
-      ) : (
-        <Row>
-          {mesPage.map(c => (
-            <Col xs={12} key={c.id} className="mb-3">
-              <Card>
-                <Card.Body>
-                  <Card.Title>{c.type}</Card.Title>
-                  <Card.Text>
-                    Du {new Date(c.dateDebut).toLocaleDateString()} au {new Date(c.dateFin).toLocaleDateString()}<br />
-                    {badgeStatut(c.statut)}<br />
-                    Demandé le {new Date(c.createdAt).toLocaleDateString()}
-                  </Card.Text>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
       )}
 
-      {/* Dates bloquées */}
       <h5 className="mt-4">Dates bloquées</h5>
       <Row>
         {datesBloquees.map(date => (
@@ -259,8 +243,7 @@ const envoyerDemande = async (data, messages = {}) => {
             <Card className="border-danger bg-light">
               <Card.Body>
                 <Card.Title>
-                  Du {new Date(date.dateDebut).toLocaleDateString()}<br />
-                  au {new Date(date.dateFin).toLocaleDateString()}
+                  Du {new Date(date.dateDebut).toLocaleDateString()} au {new Date(date.dateFin).toLocaleDateString()}
                 </Card.Title>
                 <Card.Text className="text-muted small">
                   Motif : {date.motif || 'Non précisé'}
@@ -271,41 +254,8 @@ const envoyerDemande = async (data, messages = {}) => {
         ))}
       </Row>
 
-      {/* Congés validés */}
       <h5 className="mt-4">Congés validés (tous les employés)</h5>
-      {!isMobile ? (
-        <>
-          <Table bordered hover responsive>
-            <thead>
-              <tr>
-                <th onClick={() => handleTriValides('user.nom')} style={{ cursor: 'pointer' }}>
-                  Employé {triValides.colonne === 'user.nom' && (triValides.ordre === 'asc' ? '▲' : '▼')}
-                </th>
-                <th onClick={() => handleTriValides('dateDebut')} style={{ cursor: 'pointer' }}>
-                  Début {triValides.colonne === 'dateDebut' && (triValides.ordre === 'asc' ? '▲' : '▼')}
-                </th>
-                <th onClick={() => handleTriValides('dateFin')} style={{ cursor: 'pointer' }}>
-                  Fin {triValides.colonne === 'dateFin' && (triValides.ordre === 'asc' ? '▲' : '▼')}
-                </th>
-                <th onClick={() => handleTriValides('createdAt')} style={{ cursor: 'pointer' }}>
-                  Demandé le {triValides.colonne === 'createdAt' && (triValides.ordre === 'asc' ? '▲' : '▼')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {validesPage.map(c => (
-                <tr key={c.id}>
-                  <td>{c.user?.nom}</td>
-                  <td>{new Date(c.dateDebut).toLocaleDateString()}</td>
-                  <td>{new Date(c.dateFin).toLocaleDateString()}</td>
-                  <td>{new Date(c.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-          {pagination(congesValides.length, pageValides, setPageValides)}
-        </>
-      ) : (
+      {isMobile ? (
         <Row>
           {validesPage.map(c => (
             <Col xs={12} key={c.id} className="mb-3">
@@ -321,13 +271,36 @@ const envoyerDemande = async (data, messages = {}) => {
             </Col>
           ))}
         </Row>
+      ) : (
+        <>
+          <Table bordered hover responsive>
+            <thead>
+              <tr>
+                <th onClick={() => handleTriValides('user.nom')}>Employé</th>
+                <th onClick={() => handleTriValides('dateDebut')}>Début</th>
+                <th onClick={() => handleTriValides('dateFin')}>Fin</th>
+                <th onClick={() => handleTriValides('createdAt')}>Demandé le</th>
+              </tr>
+            </thead>
+            <tbody>
+              {validesPage.map(c => (
+                <tr key={c.id}>
+                  <td>{c.user?.nom}</td>
+                  <td>{new Date(c.dateDebut).toLocaleDateString()}</td>
+                  <td>{new Date(c.dateFin).toLocaleDateString()}</td>
+                  <td>{new Date(c.createdAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+          {pagination(congesValides.length, pageValides, setPageValides)}
+        </>
       )}
 
       {/* Modal demande */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton><Modal.Title>Nouvelle demande</Modal.Title></Modal.Header>
         <Modal.Body>
-          {alert && <Alert variant="danger">{alert}</Alert>}
           <Form>
             <Form.Group className="mb-2">
               <Form.Label>Type</Form.Label>
@@ -358,6 +331,35 @@ const envoyerDemande = async (data, messages = {}) => {
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
           <Button variant="primary" onClick={handleDemande}>Envoyer</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal confirmation chevauchement */}
+      <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
+        <Modal.Header closeButton><Modal.Title>Confirmation requise</Modal.Title></Modal.Header>
+        <Modal.Body>
+          {pendingRequest?.messages?.bloquees && (
+            <p className="text-warning">{pendingRequest.messages.bloquees}</p>
+          )}
+          {pendingRequest?.messages?.doublons && (
+            <p className="text-danger">{pendingRequest.messages.doublons}</p>
+          )}
+          <p>Souhaitez-vous continuer malgré ces avertissements ?</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmation(false)}>Annuler</Button>
+          <Button variant="warning" onClick={() => envoyerDemande(pendingRequest, pendingRequest.messages)}>
+            Oui, continuer
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal alerte */}
+      <Modal show={showModalAlerte} onHide={() => setShowModalAlerte(false)}>
+        <Modal.Header closeButton><Modal.Title>Information</Modal.Title></Modal.Header>
+        <Modal.Body>{alerteMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={() => setShowModalAlerte(false)}>OK</Button>
         </Modal.Footer>
       </Modal>
     </Container>

@@ -13,7 +13,7 @@ const AboutPage = () => {
         <Col xs={12} md={6}>
           <Card className="h-100 border-0 shadow-sm">
             <Card.Body>
-              <Card.Title className="fw-bold">🎯 Notre mission</Card.Title>
+              <Card.Title className="fw-bold">Notre mission</Card.Title>
               <Card.Text className="text-muted">
                 Offrir une solution fluide et intuitive aux entreprises et aux employés pour gérer les congés, les pointages et anticiper les dates bloquées.
               </Card.Text>
@@ -24,7 +24,7 @@ const AboutPage = () => {
         <Col xs={12} md={6}>
           <Card className="h-100 border-0 shadow-sm">
             <Card.Body>
-              <Card.Title className="fw-bold">🔧 Fonctionnalités clés</Card.Title>
+              <Card.Title className="fw-bold">Fonctionnalités clés</Card.Title>
               <ul className="text-muted small ps-3 mb-0">
                 <li>Demande et suivi des congés</li>
                 <li>Pointage d'entrée / sortie journalier</li>
@@ -38,7 +38,7 @@ const AboutPage = () => {
         <Col xs={12} md={6}>
           <Card className="h-100 border-0 shadow-sm">
             <Card.Body>
-              <Card.Title className="fw-bold">👥 Pour qui ?</Card.Title>
+              <Card.Title className="fw-bold">Pour qui ?</Card.Title>
               <Card.Text className="text-muted">
                 TimeZone s’adresse aux employés, secrétaires RH et administrateurs grâce à une interface adaptée aux rôles.
               </Card.Text>

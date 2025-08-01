@@ -18,6 +18,7 @@ import HeuresAdmin from './pages/Heures/HeuresAdmin';
 import GestionPointage from './pages/Pointages/GestionPointage';
 import PrivateRoute from './components/PrivateRoute';
 import Unauthorized from './components/unauthorized';
+import NotFound from './components/NotFound'
 import './styles/TimeZone.css';
 
 
@@ -26,6 +27,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="*" element={<NotFound />} />
 
         {/* Auth publiques */}
         <Route path="/login" element={<Login />} />

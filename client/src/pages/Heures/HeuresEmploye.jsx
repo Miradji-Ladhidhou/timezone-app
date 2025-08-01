@@ -57,9 +57,7 @@ const HeuresEmploye = () => {
   };
 
   const trier = () => [...heures].sort((a, b) => triAsc ? new Date(a.date) - new Date(b.date) : new Date(b.date) - new Date(a.date));
-
   const paginer = (data) => data.slice((page - 1) * parPage, page * parPage);
-
   const heuresPage = paginer(trier());
   const totalPages = Math.ceil(heures.length / parPage);
 
@@ -101,24 +99,18 @@ const HeuresEmploye = () => {
               <th>Statut</th>
             </tr>
           </thead>
-
           <tbody>
             {heuresPage.map(h => {
               const hierStr = getHier(h.date);
               const today = estAujourdhui(h.date);
-
               const heuresTravaillées = Math.floor((h.heures_travaillees || 0) / 60);
               const suppJour = Math.floor((h.heures_supp || 0) / 60);
               const restantesJ1 = mapHeures[hierStr]?.heures_restantes || 0;
               const restantesJ1Heures = Math.floor(restantesJ1 / 60);
-
               const totalSupp = suppJour + restantesJ1Heures;
-
               const recuperees = Math.floor((h.heures_recuperees || 0) / 60);
               const restantes = totalSupp - recuperees;
-
               const editable = today && restantes > 0 && h.statut === 'non_recuperee';
-
               return (
                 <tr key={h.id}>
                   <td>{new Date(h.date).toLocaleDateString()}</td>
@@ -153,26 +145,20 @@ const HeuresEmploye = () => {
               );
             })}
           </tbody>
-
-
         </Table>
       ) : (
         <Row>
           {heuresPage.map(h => {
             const hierStr = getHier(h.date);
             const today = estAujourdhui(h.date);
-
             const heuresTravaillées = Math.floor((h.heures_travaillees || 0) / 60);
             const suppJour = Math.floor((h.heures_supp || 0) / 60);
             const restantesJ1 = mapHeures[hierStr]?.heures_restantes || 0;
             const restantesJ1Heures = Math.floor(restantesJ1 / 60);
-
             const totalSupp = suppJour + restantesJ1Heures;
             const recuperees = Math.floor((h.heures_recuperees || 0) / 60);
             const restantesCalculees = Math.max(0, totalSupp - recuperees);
-
             const editable = today && restantesCalculees > 0 && h.statut === 'non_recuperee';
-
             return (
               <Col xs={12} key={h.id} className="mb-3">
                 <Card>
@@ -187,7 +173,6 @@ const HeuresEmploye = () => {
                       <strong>Restantes :</strong> {restantesCalculees}h<br />
                       <strong>Statut :</strong> {h.statut}
                     </Card.Text>
-
                     {editable ? (
                       <>
                         <Form.Control
@@ -212,9 +197,7 @@ const HeuresEmploye = () => {
             );
           })}
         </Row>
-
       )}
-
       <div className="d-flex justify-content-center mt-3">
         {[...Array(totalPages).keys()].map(num => (
           <Button
@@ -226,7 +209,6 @@ const HeuresEmploye = () => {
           >{num + 1}</Button>
         ))}
       </div>
-
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton><Modal.Title>Confirmation</Modal.Title></Modal.Header>
         <Modal.Body>{infoMessage}</Modal.Body>

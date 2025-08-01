@@ -1,10 +1,11 @@
-// Dashboard.jsx
 import React from 'react';
 import { Card, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) return <Spinner animation="border" className="m-5" />;
 
@@ -24,7 +25,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Utilisateurs</Card.Title>
               <Card.Text>Voir et gérer tous les comptes utilisateurs.</Card.Text>
-              <Button variant="primary" href="/users">Voir les utilisateurs</Button>
+              <Button variant="primary" onClick={() => navigate('/users')}>Voir les utilisateurs</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -33,7 +34,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Congés</Card.Title>
               <Card.Text>Consulter, valider ou refuser les congés.</Card.Text>
-              <Button variant="warning" href="/conges-gestion">Gérer les congés</Button>
+              <Button variant="warning" onClick={() => navigate('/conges-gestion')}>Gérer les congés</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -42,7 +43,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Gestion des pointages</Card.Title>
               <Card.Text>Modifier ou consulter les pointages des employés.</Card.Text>
-              <Button variant="success" href="/gestion-pointages">Gérer les pointages</Button>
+              <Button variant="success" onClick={() => navigate('/gestion-pointages')}>Gérer les pointages</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -51,7 +52,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Heures supplémentaires</Card.Title>
               <Card.Text>Suivi et export des heures au-delà du temps normal.</Card.Text>
-              <Button variant="dark" href="/heures-suppGestion">Voir les heures supp</Button>
+              <Button variant="dark" onClick={() => navigate('/heures-suppGestion')}>Voir les heures supp</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -73,7 +74,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Congés</Card.Title>
               <Card.Text>Validez ou refusez les congés des employés.</Card.Text>
-              <Button variant="warning" href="/conges-gestion">Gérer les congés</Button>
+              <Button variant="warning" onClick={() => navigate('/conges-gestion')}>Gérer les congés</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -82,7 +83,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Gestion des pointages</Card.Title>
               <Card.Text>Consultez ou corrigez les heures de pointage des employés.</Card.Text>
-              <Button variant="success" href="/gestion-pointages">Voir les pointages</Button>
+              <Button variant="success" onClick={() => navigate('/gestion-pointages')}>Voir les pointages</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -91,7 +92,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Heures supplémentaires</Card.Title>
               <Card.Text>Suivi et export des heures au-delà du temps normal.</Card.Text>
-              <Button variant="dark" href="/heures-suppGestion">Voir les heures supp</Button>
+              <Button variant="dark" onClick={() => navigate('/heures-suppGestion')}>Voir les heures supp</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -112,7 +113,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Mes pointages</Card.Title>
               <Card.Text>Enregistrez vos heures d’arrivée, pause et départ chaque jour.</Card.Text>
-              <Button variant="success" href="/pointages">Aller au pointage</Button>
+              <Button variant="success" onClick={() => navigate('/pointages')}>Aller au pointage</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -121,7 +122,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Mes congés</Card.Title>
               <Card.Text>Faire une demande de congé ou consulter l’historique.</Card.Text>
-              <Button variant="info" href="/conges">Gérer mes congés</Button>
+              <Button variant="info" onClick={() => navigate('/conges')}>Gérer mes congés</Button>
             </Card.Body>
           </Card>
         </Col>
@@ -130,7 +131,7 @@ const Dashboard = () => {
             <Card.Body>
               <Card.Title>Mes heures supplémentaires</Card.Title>
               <Card.Text>Voir le cumul des heures travaillées au-delà des 7h journalières.</Card.Text>
-              <Button variant="dark" href="/heures-supp">Voir mes heures supp</Button>
+              <Button variant="dark" onClick={() => navigate('/heures-supp')}>Voir mes heures supp</Button>
             </Card.Body>
           </Card>
         </Col>
