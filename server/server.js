@@ -2,12 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 
+
 require('dotenv').config();
 
 const app = express();
 app.use(cors({
-    origin: 'https://timezone-front.onrender.com',
-    credentials: true
+    // origin: 'https://timezone-front.onrender.com',
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
 }));
 app.use(helmet());
 app.use(express.json());
